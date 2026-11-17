@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.2.2
+
+- First release on PyPI under the new name (0.2.0 and 0.2.1 are on GitHub and ghcr.io only).
+- A release run can be re-run without failing on the GitHub release it already made.
+
 ## 0.2.1
 
 - A message with several homes now says "Female only" or "Male only" on each room Codomo
   keeps for one gender, like single alerts already did.
-- First release on PyPI under the new name (0.2.0 is on GitHub and ghcr.io only).
 
 ## 0.2.0
 
