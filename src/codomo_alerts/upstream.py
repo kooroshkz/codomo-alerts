@@ -48,13 +48,21 @@ def run(client: Client | None = None) -> list[Check]:
     add("Booking counts add up", counts.booking.get(None, 0) >= counts.booking.get("direct_booking", 0) > 0,
         str(counts.booking))
 
-    first = homes[0]
-    try:
-        page = client.unit(first.path)
+    # The list runs a few minutes behind the home pages: a home just taken is still listed
+    # while its page is gone, so only fail when none of the first three can be read
+    first, error = homes[0], ""
+    for home in homes[:3]:
+        try:
+            page = client.unit(home.path)
+        except CodomoError as e:
+            error = error or str(e)
+            continue
+        first = home
         add("Home pages can be read", page.basic_rent is not None,
-            f"{first.name}: {catalog.contract_label(contract_key(page))}, rent €{page.basic_rent:,.0f}")
-    except CodomoError as e:
-        add("Home pages can be read", False, str(e))
+            f"{home.name}: {catalog.contract_label(contract_key(page))}, rent €{page.basic_rent:,.0f}")
+        break
+    else:
+        add("Home pages can be read", False, error)
 
     try:
         status, kind = client.photo(first.photos[0])

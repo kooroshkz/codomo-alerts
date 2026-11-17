@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `codomo-alerts upstream` no longer reports a change when the first home it reads was just
+  taken: Codomo's list runs a few minutes behind the home pages, so it tries up to three homes.
+
 ## 0.2.3
 
 - `holland2stay-alerts` on PyPI now only installs `codomo-alerts`, so `pipx upgrade

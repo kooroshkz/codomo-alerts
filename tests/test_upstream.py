@@ -69,6 +69,28 @@ def test_nothing_listed_fails():
     assert statuses(checks)["Homes are listed"] == "fail"
 
 
+def test_a_home_just_taken_is_not_a_change():
+    class FirstGone(FakeCodomo):
+        def unit(self, path):
+            if not self.units:
+                self.units.append(path)
+                raise Changed("Codomo changed its home pages (no price details on the unit page)")
+            return super().unit(path)
+
+    site = FirstGone(list(healthy().db.values()))
+    checks = upstream.run(site)
+    assert statuses(checks)["Home pages can be read"] == "ok"
+    assert len(site.units) == 2 and site.units[0] != site.units[1]
+
+
+def test_home_pages_that_cannot_be_read_fail():
+    site = healthy()
+    site.unit_fail = Changed("Codomo changed its home pages (no price details on the unit page)")
+    checks = upstream.run(site)
+    assert statuses(checks)["Home pages can be read"] == "fail"
+    assert "no price details" in next(c.detail for c in checks if c.name == "Home pages can be read")
+
+
 def test_new_city_is_a_notice_not_a_failure():
     site = healthy()
     site.city_list = [*site.city_list, site.city_list[0].__class__("breda", "Breda", "NL")]
