@@ -26,7 +26,7 @@ def setup_logging(level: str = "INFO") -> None:
 
 
 def db_path(cfg: Config) -> Path:
-    return cfg.data_dir / "h2s-alerts.sqlite3"
+    return cfg.data_dir / "codomo-alerts.sqlite3"
 
 
 class Lock:

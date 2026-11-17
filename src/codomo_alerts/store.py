@@ -13,16 +13,19 @@ from .search import Listing
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS listings (
-    id INTEGER PRIMARY KEY,
-    slug TEXT NOT NULL,
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     url TEXT NOT NULL,
     price REAL,
     status TEXT NOT NULL,
-    city INTEGER,
+    city TEXT,
     bedrooms INTEGER,
-    contract INTEGER,
-    furnishing INTEGER,
+    contract TEXT,
+    furnishing TEXT,
+    building TEXT,
+    persons INTEGER,
+    available_from TEXT,
+    interest INTEGER,
     active INTEGER NOT NULL DEFAULT 0,
     misses INTEGER NOT NULL DEFAULT 0,
     first_seen TEXT NOT NULL,
@@ -35,7 +38,7 @@ CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     at TEXT NOT NULL,
     kind TEXT NOT NULL,
-    listing_id INTEGER,
+    listing_id TEXT,
     status TEXT,
     price REAL,
     detail TEXT,
@@ -53,15 +56,22 @@ CREATE TABLE IF NOT EXISTS checks (
 );
 CREATE INDEX IF NOT EXISTS checks_at ON checks(at);
 CREATE TABLE IF NOT EXISTS buildings (
-    street TEXT PRIMARY KEY,
-    city INTEGER,
-    homes INTEGER NOT NULL,
+    slug TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    city TEXT,
+    url TEXT,
     first_seen TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pages (
+    id TEXT PRIMARY KEY,
+    contract TEXT,
+    read_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 """
-VERSION = 1
-ALERT_KINDS = ("new", "back", "bookable", "price", "lottery")
+VERSION = 2
+ALERT_KINDS = ("new", "back", "bookable", "price", "interest")
+DETAILS = ("city", "bedrooms", "contract", "furnishing", "building", "persons", "available_from", "interest")
 
 
 def utcnow() -> datetime:
@@ -77,9 +87,8 @@ def parse(text: str | None) -> datetime | None:
 
 
 def to_listing(row) -> Listing:
-    return Listing(id=row["id"], name=row["name"], slug=row["slug"], url=row["url"], price=row["price"],
-                   status=row["status"], city=row["city"], bedrooms=row["bedrooms"],
-                   contract=row["contract"], furnishing=row["furnishing"])
+    return Listing(id=row["id"], name=row["name"], url=row["url"], price=row["price"], status=row["status"],
+                   **{k: row[k] for k in DETAILS})
 
 
 class Store:
@@ -132,57 +141,67 @@ class Store:
 
     # Listings
 
-    def listing(self, pid: int) -> sqlite3.Row | None:
-        rows = self.q("SELECT * FROM listings WHERE id=?", (pid,))
+    def listing(self, key: str) -> sqlite3.Row | None:
+        rows = self.q("SELECT * FROM listings WHERE id=?", (key,))
         return rows[0] if rows else None
 
-    def active(self, status: str) -> dict[int, sqlite3.Row]:
+    def active(self, status: str) -> dict[str, sqlite3.Row]:
         return {r["id"]: r for r in self.q("SELECT * FROM listings WHERE active=1 AND status=?", (status,))}
 
     def activate(self, x: Listing, now: datetime, new_period: bool) -> None:
+        details = [getattr(x, k) for k in DETAILS]
         with self.lock:
             row = self.listing(x.id)
             if row is None:
-                self.x("""INSERT INTO listings(id, slug, name, url, price, status, city, bedrooms, contract,
-                          furnishing, active, misses, first_seen, listed_at, last_seen)
-                          VALUES(?,?,?,?,?,?,?,?,?,?,1,0,?,?,?)""",
-                       (x.id, x.slug, x.name, x.url, x.price, x.status, x.city, x.bedrooms, x.contract,
-                        x.furnishing, iso(now), iso(now) if new_period else None, iso(now)))
+                self.x(f"""INSERT INTO listings(id, name, url, price, status, {", ".join(DETAILS)},
+                           active, misses, first_seen, listed_at, last_seen)
+                           VALUES(?,?,?,?,?,{",".join("?" * len(DETAILS))},1,0,?,?,?)""",
+                       (x.id, x.name, x.url, x.price, x.status, *details, iso(now),
+                        iso(now) if new_period else None, iso(now)))
                 return
             listed_at = iso(now) if new_period else row["listed_at"]
-            self.x("""UPDATE listings SET slug=?, name=?, url=?, price=?, status=?, active=1, misses=0,
-                      listed_at=?, last_seen=?, gone_at=NULL,
-                      city=COALESCE(?, city), bedrooms=COALESCE(?, bedrooms),
-                      contract=COALESCE(?, contract), furnishing=COALESCE(?, furnishing)
-                      WHERE id=?""",
-                   (x.slug, x.name, x.url, x.price, x.status, listed_at, iso(now), x.city, x.bedrooms,
-                    x.contract, x.furnishing, x.id))
+            keep = ", ".join(f"{k}=COALESCE(?, {k})" for k in DETAILS)
+            self.x(f"""UPDATE listings SET name=?, url=?, price=?, status=?, active=1, misses=0,
+                       listed_at=?, last_seen=?, gone_at=NULL, {keep} WHERE id=?""",
+                   (x.name, x.url, x.price, x.status, listed_at, iso(now), *details, x.id))
 
-    def missed(self, pid: int, misses: int) -> None:
-        self.x("UPDATE listings SET misses=? WHERE id=?", (misses, pid))
+    def missed(self, key: str, misses: int) -> None:
+        self.x("UPDATE listings SET misses=? WHERE id=?", (misses, key))
 
-    def gone(self, pid: int, now: datetime) -> None:
-        self.x("UPDATE listings SET active=0, misses=0, gone_at=? WHERE id=?", (iso(now), pid))
+    def gone(self, key: str, now: datetime) -> None:
+        self.x("UPDATE listings SET active=0, misses=0, gone_at=? WHERE id=?", (iso(now), key))
 
-    def retire(self, pid: int) -> None:
+    def retire(self, key: str) -> None:
         """No longer matches the search (filters changed). Not the same as taken."""
-        self.x("UPDATE listings SET active=0, misses=0, listed_at=NULL WHERE id=?", (pid,))
+        self.x("UPDATE listings SET active=0, misses=0, listed_at=NULL WHERE id=?", (key,))
 
     def details(self, x: Listing) -> None:
-        self.x("""UPDATE listings SET city=COALESCE(?, city), bedrooms=COALESCE(?, bedrooms),
-                  contract=COALESCE(?, contract), furnishing=COALESCE(?, furnishing) WHERE id=?""",
-               (x.city, x.bedrooms, x.contract, x.furnishing, x.id))
+        keep = ", ".join(f"{k}=COALESCE(?, {k})" for k in DETAILS)
+        self.x(f"UPDATE listings SET {keep} WHERE id=?", (*[getattr(x, k) for k in DETAILS], x.id))
 
     def known_details(self, x: Listing) -> None:
         row = self.listing(x.id)
         if row:
-            for attr in ("city", "bedrooms", "contract", "furnishing"):
+            for attr in DETAILS:
                 if getattr(x, attr) is None and row[attr] is not None:
                     setattr(x, attr, row[attr])
+        if x.contract is None:
+            x.contract = self.contract(x.id)
+
+    # Contracts read from a home's own page, kept for homes that don't match too
+
+    def contract(self, key: str) -> str | None:
+        rows = self.q("SELECT contract FROM pages WHERE id=?", (key,))
+        return rows[0]["contract"] if rows else None
+
+    def save_contract(self, key: str, contract: str) -> None:
+        self.x("""INSERT INTO pages(id, contract, read_at) VALUES(?,?,?)
+                  ON CONFLICT(id) DO UPDATE SET contract=excluded.contract, read_at=excluded.read_at""",
+               (key, contract, iso(utcnow())))
 
     # Events
 
-    def event(self, kind: str, listing_id: int | None, status: str | None = None, price: float | None = None,
+    def event(self, kind: str, listing_id: str | None, status: str | None = None, price: float | None = None,
               detail: str | None = None, at: datetime | None = None, notified: bool | None = None) -> int:
         if notified is None:
             notified = kind not in ALERT_KINDS
@@ -218,17 +237,15 @@ class Store:
     def prune(self, days: int = 30) -> None:
         cutoff = iso(utcnow() - timedelta(days=days))
         self.x("DELETE FROM checks WHERE at < ?", (cutoff,))
+        self.x("DELETE FROM pages WHERE read_at < ?", (cutoff,))
 
     # Buildings
 
-    def building(self, street: str, city: int | None, homes: int, now: datetime) -> bool:
-        """Record a building; True when it was not known before."""
+    def building(self, slug: str, name: str, city: str | None, url: str | None, now: datetime) -> bool:
+        """Record a building page; True when it was not known before."""
         with self.lock:
-            known = self.q("SELECT homes FROM buildings WHERE street=?", (street,))
-            if known:
-                self.x("UPDATE buildings SET homes=MAX(homes, ?), city=COALESCE(city, ?) WHERE street=?",
-                       (homes, city, street))
+            if self.q("SELECT 1 FROM buildings WHERE slug=?", (slug,)):
                 return False
-            self.x("INSERT INTO buildings(street, city, homes, first_seen) VALUES(?,?,?,?)",
-                   (street, city, homes, iso(now)))
+            self.x("INSERT INTO buildings(slug, name, city, url, first_seen) VALUES(?,?,?,?,?)",
+                   (slug, name, city, url, iso(now)))
             return True

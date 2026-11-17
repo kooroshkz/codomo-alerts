@@ -8,6 +8,7 @@ from . import PROJECT_URL, schedule
 from .search import Listing
 
 DIGEST_LIMIT = 10
+SHORTLIST = "Not first come: register your interest on codomo.eu, Codomo picks someone from the shortlist"
 
 
 def money(value: float | None) -> str:
@@ -24,8 +25,10 @@ def terms(x: Listing) -> str:
     return " · ".join(p for p in (x.contract_name, x.furnishing_name) if p)
 
 
-def deadline(now: datetime | None = None) -> str:
-    return f"Sign up by {schedule.lottery_deadline(now):%a %H:%M}"
+def interested(x: Listing) -> str:
+    if x.interest is None:
+        return ""
+    return "1 person showed interest" if x.interest == 1 else f"{x.interest} people showed interest"
 
 
 TITLES = {
@@ -33,7 +36,7 @@ TITLES = {
     "back": "Back: {name}",
     "bookable": "Now bookable: {name}",
     "price": "Price drop: {name}",
-    "lottery": "Lottery: {name}",
+    "interest": "Register interest (shortlist): {name}",
 }
 
 
@@ -44,36 +47,38 @@ def alert(kind: str, x: Listing, detail: str | None = None, now: datetime | None
                  f"{money(float(detail))} → {money(x.price)}"]
     if terms(x):
         lines.append(terms(x))
-    if kind == "lottery":
-        lines.append(deadline(now))
+    if kind == "interest":
+        lines.append(interested(x))
+        lines.append(SHORTLIST)
     lines.append(x.url)
     return TITLES[kind].format(name=x.name), "\n".join(line for line in lines if line)
 
 
 def digest(items: list[tuple[str, Listing]], now: datetime | None = None) -> tuple[str, str]:
-    lottery = all(kind == "lottery" for kind, _ in items)
+    interest = all(kind == "interest" for kind, _ in items)
     n = len(items)
-    if lottery:
-        title = f"Lottery: {n} homes match"
+    if interest:
+        title = f"Register interest: {n} homes match"
     elif all(kind == "new" for kind, _ in items):
         title = f"{n} new homes"
     else:
         title = f"{n} homes to look at"
     blocks = []
     for kind, x in items[:DIGEST_LIMIT]:
-        label = "" if kind in ("new", "lottery") else {"back": "Back: ", "bookable": "Now bookable: ",
-                                                         "price": "Price drop: "}[kind]
-        blocks.append(f"{label}{x.name} · {facts(x)}\n{x.url}")
+        label = "" if kind in ("new", "interest") else {"back": "Back: ", "bookable": "Now bookable: ",
+                                                          "price": "Price drop: "}[kind]
+        extra = f" · {interested(x)}" if kind == "interest" and interested(x) else ""
+        blocks.append(f"{label}{x.name} · {facts(x)}{extra}\n{x.url}")
     if n > DIGEST_LIMIT:
         blocks.append(f"and {n - DIGEST_LIMIT} more")
-    if lottery:
-        blocks.append(deadline(now))
+    if interest:
+        blocks.append(SHORTLIST)
     return title, "\n\n".join(blocks)
 
 
 def welcome(summary: str, matching: int) -> tuple[str, str]:
     homes = "1 home matches" if matching == 1 else f"{matching} homes match"
-    return "Watching Holland2Stay", f"{summary}\n{homes} right now. You'll get a message when a new one shows up."
+    return "Watching Codomo", f"{summary}\n{homes} right now. You'll get a message when a new one shows up."
 
 
 def search_changed(summary: str, matching: int) -> tuple[str, str]:
@@ -86,17 +91,17 @@ def paused(reason: str, until: datetime) -> tuple[str, str]:
 
 
 def resumed() -> tuple[str, str]:
-    return "Alerts back on", "Holland2Stay answers again."
+    return "Alerts back on", "Codomo answers again."
 
 
 def broken(reason: str) -> tuple[str, str]:
     return "Alerts may be broken", f"{reason}. Check for an update: {PROJECT_URL}/releases"
 
 
-def building(street: str, city: str, homes: int) -> tuple[str, str]:
-    where = " · ".join(p for p in (city, f"{homes} homes" if homes > 1 else "1 home") if p)
-    return f"New building: {street}", f"{where} · not on sale yet"
+def building(name: str, city: str, url: str | None = None) -> tuple[str, str]:
+    where = " · ".join(p for p in (city, "new on codomo.eu") if p)
+    return f"New building: {name}", "\n".join(p for p in (where, url) if p)
 
 
 def test() -> tuple[str, str]:
-    return "holland2stay-alerts", "Test message. Notifications work."
+    return "codomo-alerts", "Test message. Notifications work."

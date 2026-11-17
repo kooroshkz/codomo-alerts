@@ -1,86 +1,118 @@
 from __future__ import annotations
 
-import fnmatch
+import gzip
+from collections import Counter
 from datetime import UTC, datetime, timedelta
+from math import ceil
+from pathlib import Path
 
 import pytest
 
-from h2s_alerts.config import build
-from h2s_alerts.store import Store
+from codomo_alerts import catalog
+from codomo_alerts.codomo import Card, City, Counts, UnitPage
+from codomo_alerts.config import build
+from codomo_alerts.store import Store
 
-FIELDS = {
-    "available_to_book": "status",
-    "entity_id": "id",
-    "no_of_rooms": "bedrooms",
-    "type_of_contract": "contract",
-    "maximum_number_of_persons": "occupants",
-    "finishing": "furnishing",
-}
+DATA = Path(__file__).parent / "data"
 
 
-def home(pid: int, name: str | None = None, *, status: int = 179, city: int = 29, bedrooms: int = 104,
-         contract: int = 21, furnishing: int = 6261, occupants: int = 22, price: float = 1200.0,
-         sku: str | None = None, start: str = "2026-12-01 00:00:00") -> dict:
-    return {"id": pid, "name": name or f"Teststraat {pid}", "url_key": f"teststraat-{pid}", "status": status,
-            "city": city, "bedrooms": bedrooms, "contract": contract, "furnishing": furnishing,
-            "occupants": occupants, "price": price, "sku": sku or f"r-tst-{pid}",
-            "next_contract_startdate": start}
+def page(name: str) -> str:
+    """Real codomo.eu pages saved on 2026-11-15: the 2 bedroom list (19 to book directly,
+    2 to register interest), a short-stay home and a home with registrations."""
+    return gzip.decompress((DATA / name).read_bytes()).decode("utf-8")
 
 
-def _match(p: dict, flt: tuple[str, str, str]) -> bool:
-    field, value, cond = flt
-    actual = p.get(FIELDS.get(field, field))
-    if cond == "eq":
-        return str(actual) == value
-    if cond == "in":
-        return str(actual) in value.split(",")
-    if cond == "nin":
-        return str(actual) not in value.split(",")
-    if cond == "like":
-        return fnmatch.fnmatchcase(str(actual), value.replace("%", "*"))
-    if cond in ("gteq", "lteq"):
-        a, b = (float(actual), float(value)) if field == "price" else (str(actual), value)
-        return a >= b if cond == "gteq" else a <= b
-    raise AssertionError(cond)
+def home(n: int, name: str | None = None, *, city: str = "Eindhoven", bedrooms: int = 0, rent: float = 1100.0,
+         extra: float = 100.0, direct: bool = True, furnishing: str = "Furnished", persons: str = "1",
+         contract: str = "indefinite", available: str = "2026-12-01", interest: int | None = None,
+         country: str = "nl") -> Card:
+    key = f"teststraat-{n}"
+    slug = catalog.city_slug(catalog.city_label(city))
+    card = Card(path=f"/homes/{country}/en/{slug}/test-tower/{key}", country=country, key=key, unit_id=f"uid-{n}",
+                name=name or f"Teststraat {n}", city=city, building="Test Tower", bedrooms=bedrooms,
+                bedrooms_label=catalog.bedrooms_label(bedrooms), area="40", persons=persons, finishing=furnishing,
+                floor="2", available_from=available, min_stay="12 months", rent=rent, extra=extra, direct=direct,
+                interest=interest, photos=[f"https://images.codomoliving.com/media/pictures/tst/{key}.jpg"])
+    card.contract = contract       # what its own page says
+    return card
 
 
-class FakeH2S:
-    base_url = "https://www.holland2stay.com"
+class FakeCodomo:
+    """Answers like codomo.eu: filters, 25 homes a page, page 1 again past the end, counts that
+    ignore their own filter, home pages, cities and a sitemap."""
 
-    def __init__(self, homes: list[dict] | None = None):
-        self.db = {h["id"]: h for h in homes or []}
+    base_url = "https://codomo.eu"
+
+    def __init__(self, homes: list[Card] | None = None):
+        self.db = {h.key: h for h in homes or []}
         self.requests = 0
         self.fail: Exception | None = None
-        self.calls: list[list] = []
+        self.unit_fail: Exception | None = None
+        self.calls: list[tuple[str, dict]] = []
+        self.units: list[str] = []
+        self.city_list = [City(catalog.city_slug(n), n, m.upper()) for n, m in catalog.CITIES.items()]
+        self.building_pages: list[str] = []
 
-    def add(self, *homes: dict) -> None:
+    def add(self, *homes: Card) -> None:
         for h in homes:
-            self.db[h["id"]] = h
+            self.db[h.key] = h
 
-    def remove(self, *ids: int) -> None:
-        for i in ids:
-            self.db.pop(i, None)
+    def remove(self, *numbers: int) -> None:
+        for n in numbers:
+            self.db.pop(f"teststraat-{n}", None)
 
-    def products(self, filters, fields, page_size=300, page=1, sort=None):
-        self.requests += 1
-        self.calls.append(filters)
-        if self.fail:
-            raise self.fail
-        rows = [p for p in self.db.values() if all(_match(p, f) for f in filters)]
-        rows.sort(key=lambda p: p["id"], reverse=bool(sort and sort[1] == "DESC"))
-        rows = rows[(page - 1) * page_size: page * page_size]
-        return [{"id": p["id"], "name": p["name"], "url": f"https://account.holland2stay.com/{p['url_key']}.html",
-                 "price_info": {"final_price": p["price"]}} for p in rows]
-
-    def buckets(self, filters):
+    def _hit(self) -> None:
         self.requests += 1
         if self.fail:
             raise self.fail
-        counts: dict[int, int] = {}
-        for p in self.db.values():
-            if all(_match(p, f) for f in filters):
-                counts[p["city"]] = counts.get(p["city"], 0) + 1
-        return {"city_bucket": counts}
+
+    def homes(self, country: str, params: dict):
+        self._hit()
+        self.calls.append((country, dict(params)))
+        mode = params.get("publish_mode")
+        rows = [h for h in self.db.values() if h.country == country]
+
+        def keep(h: Card, ignore: str = "") -> bool:
+            if ignore != "publish_mode" and mode and (mode == "direct_booking") != h.direct:
+                return False
+            if ignore != "bedrooms" and "bedrooms" in params and h.bedrooms != int(params["bedrooms"]):
+                return False
+            if "city" in params and catalog.city_slug(catalog.city_label(h.city)) != params["city"]:
+                return False
+            return not ("max_rent" in params and h.rent > float(params["max_rent"]))
+
+        shown = sorted((h for h in rows if keep(h)), key=lambda h: h.key)
+        all_types = [h for h in rows if keep(h, "publish_mode")]
+        booking = {None: len(all_types), "direct_booking": sum(h.direct for h in all_types)}
+        booking["interest"] = booking[None] - booking["direct_booking"]
+        bedrooms = dict(Counter(h.bedrooms for h in rows if keep(h, "bedrooms")))
+        n = int(params.get("page", 1))
+        if n > max(1, ceil(len(shown) / 25)):
+            n = 1
+        return shown[(n - 1) * 25: n * 25], Counts(booking, bedrooms)
+
+    def unit(self, path: str) -> UnitPage:
+        self._hit()
+        self.units.append(path)
+        if self.unit_fail:
+            raise self.unit_fail
+        h = next(h for h in self.db.values() if h.path == path)
+        stay = {"indefinite": "", "2y": "24 months", "1y": "12 months"}.get(h.contract, f"{h.contract[:-1]} months")
+        return UnitPage(unit_id=h.unit_id, publish_mode="direct_booking" if h.direct else "interest",
+                        interest=h.interest, basic_rent=h.rent, service=h.extra, max_stay=stay,
+                        short_stay=h.contract.endswith("m"))
+
+    def cities(self) -> list[City]:
+        self._hit()
+        return self.city_list
+
+    def photo(self, url: str) -> tuple[int, str]:
+        return 200, "image/jpeg"
+
+    def sitemap(self) -> str:
+        self._hit()
+        locs = "".join(f"<url><loc>https://codomo.eu{p}</loc></url>" for p in self.building_pages)
+        return f"<urlset>{locs}</urlset>"
 
 
 class FakeNotifier:
@@ -101,7 +133,7 @@ class FakeNotifier:
 
 class Clock:
     def __init__(self, start: datetime | None = None):
-        # a Tuesday at 10:00 in Amsterdam (08:00 UTC in winter time)
+        # a Tuesday at 10:00 in Amsterdam (09:00 UTC in winter time)
         self.now = start or datetime(2026, 11, 3, 9, 0, tzinfo=UTC)
 
     def __call__(self):

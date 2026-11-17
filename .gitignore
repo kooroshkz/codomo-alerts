@@ -10,7 +10,7 @@ dist/
 .coverage
 htmlcov/
 
-data/
+/data/
 config.toml
 *.sqlite3
 *.sqlite3-*

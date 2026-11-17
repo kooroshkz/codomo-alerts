@@ -1,8 +1,8 @@
 import random
 from datetime import datetime, time
 
-from h2s_alerts import schedule
-from h2s_alerts.config import MIN_INTERVAL, Schedule
+from codomo_alerts import schedule
+from codomo_alerts.config import MIN_INTERVAL, Schedule
 
 AMS = schedule.AMS
 
@@ -29,16 +29,9 @@ def test_delay_follows_window_and_never_goes_below_minimum():
     assert all(schedule.next_delay(fast, at(2026, 11, 3, 10), rng) >= MIN_INTERVAL for _ in range(50))
 
 
-def test_lottery_checks_more_often_on_tuesday_evening():
-    s = Schedule(hot=120, lottery=600)
-    assert schedule.lottery_due_every(s, at(2026, 11, 3, 17, 5)) == 120
-    assert schedule.lottery_due_every(s, at(2026, 11, 4, 17, 5)) == 600
-
-
-def test_lottery_deadline_is_next_sunday_evening():
-    assert schedule.lottery_deadline(at(2026, 11, 3, 17)) == at(2026, 11, 8, 20)
-    assert schedule.lottery_deadline(at(2026, 11, 8, 19, 59)) == at(2026, 11, 8, 20)
-    assert schedule.lottery_deadline(at(2026, 11, 8, 20, 1)) == at(2026, 11, 15, 20)
+def test_register_interest_homes_are_checked_less_often():
+    assert schedule.interest_due_every(Schedule(interest=600)) == 600
+    assert schedule.interest_due_every(Schedule(interest=10)) == MIN_INTERVAL
 
 
 def test_quiet_hours_across_midnight():

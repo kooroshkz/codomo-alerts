@@ -33,8 +33,8 @@ jobs:
           context: .
           push: false
           load: true
-          tags: h2s-alerts:ci
+          tags: codomo-alerts:ci
       - name: Smoke test
         run: |
-          docker run --rm h2s-alerts:ci --version
-          docker run --rm h2s-alerts:ci demo --export /tmp/demo
+          docker run --rm codomo-alerts:ci --version
+          docker run --rm codomo-alerts:ci demo --export /tmp/demo

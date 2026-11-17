@@ -1,13 +1,13 @@
 from datetime import UTC, datetime, timedelta
 
-from h2s_alerts.search import Listing
-from h2s_alerts.tracker import Tracker
+from codomo_alerts.search import Listing
+from codomo_alerts.tracker import Tracker
 
 T0 = datetime(2026, 11, 3, 9, 0, tzinfo=UTC)
 
 
 def L(pid, price=1000.0, status="available"):
-    return Listing(pid, f"Home {pid}", f"home-{pid}", f"https://x/{pid}", price, status)
+    return Listing(str(pid), f"Home {pid}", f"https://x/{pid}", price, status)
 
 
 def snap(*listings):
@@ -15,14 +15,14 @@ def snap(*listings):
 
 
 def kinds(result):
-    return [(c.kind, c.listing.id) for c in result.changes]
+    return [(c.kind, int(c.listing.id)) for c in result.changes]
 
 
 def test_first_run_is_quiet(store):
     t = Tracker(store, "fp")
     r = t.apply("available", snap(L(1), L(2)), T0)
     assert r.baseline and not r.filters_changed and r.changes == []
-    assert set(store.active("available")) == {1, 2}
+    assert set(store.active("available")) == {"1", "2"}
 
 
 def test_new_home(store):
@@ -68,19 +68,19 @@ def test_back_after_a_while_but_not_after_a_blink(store):
     assert kinds(r) == [("back", 1)]
 
 
-def test_lottery_home_becomes_bookable(store):
+def test_interest_home_becomes_bookable(store):
     t = Tracker(store, "fp")
     t.apply("available", {}, T0)
-    t.apply("lottery", snap(L(7, status="lottery")), T0)
+    t.apply("interest", snap(L(7, status="interest")), T0)
     r = t.apply("available", snap(L(7)), T0 + timedelta(minutes=2))
     assert kinds(r) == [("bookable", 7)]
-    assert t.apply("lottery", {}, T0 + timedelta(minutes=4)).changes == []
+    assert t.apply("interest", {}, T0 + timedelta(minutes=4)).changes == []
 
 
-def test_new_lottery_home(store):
+def test_new_interest_home(store):
     t = Tracker(store, "fp")
-    t.apply("lottery", {}, T0)
-    assert kinds(t.apply("lottery", snap(L(9, status="lottery")), T0 + timedelta(minutes=2))) == [("lottery", 9)]
+    t.apply("interest", {}, T0)
+    assert kinds(t.apply("interest", snap(L(9, status="interest")), T0 + timedelta(minutes=2))) == [("interest", 9)]
 
 
 def test_price_drop(store):
@@ -96,8 +96,8 @@ def test_new_filters_start_quietly(store):
     Tracker(store, "old").apply("available", snap(L(1), L(2)), T0)
     r = Tracker(store, "new").apply("available", snap(L(2), L(3)), T0 + timedelta(minutes=2))
     assert r.baseline and r.filters_changed and r.changes == []
-    assert set(store.active("available")) == {2, 3}
-    assert store.listing(1)["gone_at"] is None  # left the search, was not taken
+    assert set(store.active("available")) == {"2", "3"}
+    assert store.listing("1")["gone_at"] is None  # left the search, was not taken
 
 
 def test_time_on_market(store):

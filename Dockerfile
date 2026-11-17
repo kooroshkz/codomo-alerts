@@ -4,8 +4,8 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    H2S_DATA_DIR=/data \
-    H2S_HOST=0.0.0.0 \
+    CODOMO_DATA_DIR=/data \
+    CODOMO_HOST=0.0.0.0 \
     TZ=Europe/Amsterdam
 
 WORKDIR /src
@@ -23,7 +23,7 @@ WORKDIR /config
 VOLUME /data
 EXPOSE 8080
 
-HEALTHCHECK --interval=1m --timeout=5s --start-period=30s CMD ["h2s-alerts", "health"]
+HEALTHCHECK --interval=1m --timeout=5s --start-period=30s CMD ["codomo-alerts", "health"]
 
-ENTRYPOINT ["h2s-alerts"]
+ENTRYPOINT ["codomo-alerts"]
 CMD ["watch"]

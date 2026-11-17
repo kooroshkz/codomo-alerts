@@ -1,7 +1,7 @@
-from conftest import FakeH2S, home
+from conftest import FakeCodomo, home
 
-from h2s_alerts import upstream
-from h2s_alerts.client import Changed
+from codomo_alerts import upstream
+from codomo_alerts.client import Changed, Maintenance
 
 
 def statuses(checks):
@@ -9,39 +9,48 @@ def statuses(checks):
 
 
 def healthy():
-    return FakeH2S([home(1), home(2, city=25), home(3, status=180)])
+    return FakeCodomo([home(1), home(2, city="Rotterdam", bedrooms=2), home(3, direct=False)])
 
 
 def test_healthy_site_passes():
-    checks = upstream.run(healthy(), codomo=False)
+    checks = upstream.run(healthy())
     assert all(c.status == "ok" for c in checks), checks
 
 
 def test_ignored_filters_fail():
-    class IgnoresPrice(FakeH2S):
-        def products(self, filters, *a, **kw):
-            return super().products([f for f in filters if f[0] != "price"], *a, **kw)
+    class IgnoresBedrooms(FakeCodomo):
+        def homes(self, country, params):
+            return super().homes(country, {k: v for k, v in params.items() if k != "bedrooms"})
 
-    checks = upstream.run(IgnoresPrice([home(1), home(2)]), codomo=False)
-    assert statuses(checks)["Filters are applied"] == "fail"
+    checks = upstream.run(IgnoresBedrooms([home(1), home(2, bedrooms=2)]))
+    assert statuses(checks)["Follow-up pages answer"] == "fail"
 
 
-def test_endpoint_error_fails():
-    h2s = healthy()
-    h2s.fail = Changed("Holland2Stay moved or removed the listing endpoint")
-    checks = upstream.run(h2s, codomo=False)
+def test_site_change_fails():
+    site = healthy()
+    site.fail = Changed("Codomo moved or removed the homes page")
+    checks = upstream.run(site)
     assert checks[0].status == "fail" and "moved" in checks[0].detail
 
 
+def test_maintenance_says_it_is_temporary():
+    site = healthy()
+    site.fail = Maintenance("Codomo is down for maintenance")
+    checks = upstream.run(site)
+    assert checks[0].status == "fail" and "temporary" in checks[0].detail
+
+
 def test_nothing_listed_fails():
-    checks = upstream.run(FakeH2S([home(3, status=180)]), codomo=False)
+    checks = upstream.run(FakeCodomo([home(3, direct=False)]))
     assert statuses(checks)["Homes are listed"] == "fail"
 
 
 def test_new_city_is_a_notice_not_a_failure():
-    checks = upstream.run(FakeH2S([home(1), home(2, city=7001)]), codomo=False)
+    site = healthy()
+    site.city_list = [*site.city_list, site.city_list[0].__class__("breda", "Breda", "NL")]
+    checks = upstream.run(site)
     notice = [c for c in checks if c.status == "notice"]
-    assert notice and "7001" in notice[0].detail
+    assert notice and "Breda" in notice[0].detail
     assert not any(c.status == "fail" for c in checks)
 
 

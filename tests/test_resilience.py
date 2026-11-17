@@ -7,42 +7,42 @@ import urllib.error
 import urllib.request
 
 import pytest
-from conftest import Clock, FakeH2S, FakeNotifier, home
+from conftest import Clock, FakeCodomo, FakeNotifier, home
 
-from h2s_alerts import cli, demo
-from h2s_alerts.client import RateLimited, _retry_after
-from h2s_alerts.config import build
-from h2s_alerts.dashboard import serve
-from h2s_alerts.notify import Notifier
-from h2s_alerts.watcher import MAX_PAUSE, Watcher
+from codomo_alerts import cli, demo
+from codomo_alerts.client import RateLimited, _retry_after
+from codomo_alerts.config import build
+from codomo_alerts.dashboard import serve
+from codomo_alerts.notify import Notifier
+from codomo_alerts.watcher import MAX_PAUSE, Watcher
 
 
-class FailOnLottery(FakeH2S):
-    """Answers the normal search, then fails on the lottery search."""
+class FailOnInterest(FakeCodomo):
+    """Answers the normal search, then fails on the register-interest search."""
 
-    lottery_fail = None
+    interest_fail = None
 
-    def products(self, filters, fields, page_size=300, page=1, sort=None):
-        if ("available_to_book", "336", "eq") in filters and self.lottery_fail:
+    def homes(self, country, params):
+        if params.get("publish_mode") == "interest" and self.interest_fail:
             self.requests += 1
-            raise self.lottery_fail
-        return super().products(filters, fields, page_size, page, sort)
+            raise self.interest_fail
+        return super().homes(country, params)
 
 
-def watcher(store, make_cfg, h2s, notifier=None, **cfg):
+def watcher(store, make_cfg, site, notifier=None, **cfg):
     clock = Clock()
     n = notifier or FakeNotifier()
-    w = Watcher(make_cfg(**cfg), store, client=h2s, notifier=n, clock=clock, rng=random.Random(0))
+    w = Watcher(make_cfg(**cfg), store, client=site, notifier=n, clock=clock, rng=random.Random(0))
     return w, n, clock
 
 
 def test_alert_survives_a_failure_later_in_the_same_check(store, make_cfg):
-    h2s = FailOnLottery([home(1)])
-    w, n, clock = watcher(store, make_cfg, h2s)
+    site = FailOnInterest([home(1)])
+    w, n, clock = watcher(store, make_cfg, site)
     w.tick()
-    h2s.add(home(2))
-    h2s.lottery_fail = RateLimited("slow down", retry_after=120)
-    clock.advance(minutes=15)  # the lottery is due again
+    site.add(home(2))
+    site.interest_fail = RateLimited("slow down", retry_after=120)
+    clock.advance(minutes=15)  # the register-interest homes are due again
     assert w.tick() == 120  # the check failed and backs off
     assert "Teststraat 2" in n.titles()  # but the new home was stored first and still sent
 
@@ -68,10 +68,10 @@ def test_one_broken_channel_does_not_repeat_alerts_elsewhere():
 
 
 def test_building_notices_wait_for_quiet_hours(store, make_cfg):
-    h2s = FakeH2S([home(1)])
-    w, n, clock = watcher(store, make_cfg, h2s, notify={"quiet_hours": "13:00-18:00"})
+    site = FakeCodomo([home(1)])
+    w, n, clock = watcher(store, make_cfg, site, notify={"quiet_hours": "13:00-18:00"})
     w.tick()  # 10:00
-    h2s.add(*[home(100 + i, name=f"Nieuwbouw {i}", status=6203, price=5000) for i in range(3)])
+    site.building_pages = ["/homes/nl/en/eindhoven/nieuwbouw"]
     clock.advance(hours=6)  # 16:00, quiet
     w.tick()
     assert not any(t.startswith("New building") for t in n.titles())
@@ -80,23 +80,23 @@ def test_building_notices_wait_for_quiet_hours(store, make_cfg):
     assert "New building: Nieuwbouw" in n.titles()
 
 
-def test_turning_the_lottery_off_clears_it(store, make_cfg):
-    h2s = FakeH2S([home(1), home(2, status=336)])
-    w, n, clock = watcher(store, make_cfg, h2s)
+def test_turning_interest_off_clears_it(store, make_cfg):
+    site = FakeCodomo([home(1), home(2, direct=False)])
+    w, n, clock = watcher(store, make_cfg, site)
     w.tick()
-    assert store.active("lottery")
-    off = Watcher(make_cfg(search={"cities": ["Eindhoven"], "lottery": False}), store, client=h2s,
+    assert store.active("interest")
+    off = Watcher(make_cfg(search={"cities": ["Eindhoven"], "interest": False}), store, client=site,
                   notifier=n, clock=clock)
     clock.advance(minutes=2)
     off.tick()
-    assert not store.active("lottery")
+    assert not store.active("interest")
 
 
 def test_huge_retry_after_is_capped(store, make_cfg):
-    h2s = FakeH2S([home(1)])
-    w, n, clock = watcher(store, make_cfg, h2s)
+    site = FakeCodomo([home(1)])
+    w, n, clock = watcher(store, make_cfg, site)
     w.tick()
-    h2s.fail = RateLimited("slow down", retry_after=10**9)
+    site.fail = RateLimited("slow down", retry_after=10**9)
     clock.advance(minutes=2)
     assert w.tick() == MAX_PAUSE
     assert _retry_after("inf") is None

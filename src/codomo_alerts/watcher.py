@@ -1,4 +1,4 @@
-"""The loop: check, compare, notify, wait. Backs off when Holland2Stay pushes back."""
+"""The loop: check, compare, notify, wait. Backs off when Codomo pushes back."""
 
 from __future__ import annotations
 
@@ -11,20 +11,22 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 from . import catalog, messages, schedule
-from .client import Blocked, Changed, Client, H2SError, RateLimited
+from .client import Blocked, Changed, Client, CodomoError, RateLimited
 from .config import Config
 from .notify import Notifier
-from .search import Listing, describe, discover_cities, fetch, newest, street_of
+from .search import Listing, building_name, buildings, contract, discover_cities, fetch
 from .store import Store, iso, parse, to_listing, utcnow
 from .tracker import Result, Tracker
 
-log = logging.getLogger("h2s_alerts")
+log = logging.getLogger("codomo_alerts")
 
 DISCOVER_EVERY = timedelta(hours=24)
 BUILDINGS_EVERY = timedelta(hours=6)
 SLOW_FAILURE_NOTICE = timedelta(hours=1)
 ALERT_TTL = timedelta(hours=6)   # an alert that can't be sent for this long is dropped
 MAX_PAUSE = 6 * 3600
+PAGES_PER_CHECK = 40             # home pages read per check for the maximum stay
+PAGES_FOR_ALERTS = 10
 
 
 class Watcher:
@@ -73,7 +75,7 @@ class Watcher:
         started, before = time.monotonic(), self.client.requests
         try:
             matching = self.check(now)
-        except H2SError as e:
+        except CodomoError as e:
             self.store.check(False, self._ms(started), None, self.client.requests - before, str(e))
             delay = self.failed(e, now)
             self.deliver(now)
@@ -101,15 +103,20 @@ class Watcher:
     def check(self, now: datetime) -> int:
         search = self.cfg.search
         self.discover(now)
-        available = self.apply("available", fetch(self.client, search, "available"), now)
+        first = not self.store.get("welcomed")
+        available = self.apply("available", self.resolve(fetch(self.client, search, "available")), now)
         results = [available]
         if available.baseline:
             self.started(available, now)
-        if not search.lottery:
-            self.lottery_off()
-        elif self.due("lottery_checked", now, schedule.lottery_due_every(self.cfg.schedule, now)):
-            results.append(self.apply("lottery", fetch(self.client, search, "lottery"), now))
-            self.store.set("lottery_checked", iso(now))
+        if not search.interest:
+            self.interest_off()
+        elif self.due("interest_checked", now, schedule.interest_due_every(self.cfg.schedule)):
+            interest = self.apply("interest", self.resolve(fetch(self.client, search, "interest")), now)
+            results.append(interest)
+            self.store.set("interest_checked", iso(now))
+            if first and interest.baseline and self.cfg.notify.existing_on_start:
+                # register-interest homes have no race to lose: on the first run they are sent too
+                self.existing("interest", now)
         if self.due("buildings_checked", now, BUILDINGS_EVERY.total_seconds()):
             self.buildings(now)
             self.store.set("buildings_checked", iso(now))
@@ -123,7 +130,31 @@ class Watcher:
         log.info("%d match%s", available.matching, f" ({extra})" if extra else "")
         return available.matching
 
-    def apply(self, status: str, current: dict[int, Listing], now: datetime) -> Result:
+    def resolve(self, current: dict[str, Listing]) -> dict[str, Listing]:
+        """Fill in what earlier checks learned. With a contract filter, each new home's own page
+        is read for its maximum stay; a home whose page can't be read waits for the next check,
+        so a short stay is never announced to someone who wants a long one."""
+        for x in current.values():
+            self.store.known_details(x)
+        wanted = self.cfg.search.contracts
+        if not wanted:
+            return current
+        todo = [x for x in current.values() if x.contract is None]
+        self.read_contracts(todo, PAGES_PER_CHECK)
+        waiting = sum(x.contract is None for x in todo)
+        if waiting:
+            log.info("%d home%s wait for the next check to read their contract", waiting,
+                     "s" if waiting > 1 else "")
+        return {k: x for k, x in current.items() if catalog.contract_ok(x.contract, wanted)}
+
+    def read_contracts(self, listings: list[Listing], budget: int) -> None:
+        for x in listings[:budget]:
+            key = contract(self.client, x)
+            if key:
+                x.contract = key
+                self.store.save_contract(x.id, key)
+
+    def apply(self, status: str, current: dict[str, Listing], now: datetime) -> Result:
         with self.store.transaction():
             result = self.tracker.apply(status, current, now)
             for c in result.changes:
@@ -135,15 +166,14 @@ class Watcher:
         return last is None or (now - last).total_seconds() >= every
 
     def details(self, listings: list[Listing]) -> None:
-        """Best effort: an alert without the city is better than no alert."""
+        """Best effort: an alert without the contract is better than no alert."""
         for x in listings:
             self.store.known_details(x)
-        need = [x for x in listings if None in (x.city, x.bedrooms, x.contract, x.furnishing)]
+        need = [x for x in listings if x.contract is None]
         if need:
-            extra = [int(c) for c in self.store.get("cities_seen", {})]
             try:
-                describe(self.client, need, self.cfg.search, extra)
-            except H2SError as e:
+                self.read_contracts(need, PAGES_FOR_ALERTS)
+            except CodomoError as e:
                 log.info("Couldn't look up all details: %s", e)
         for x in listings:
             self.store.details(x)
@@ -158,16 +188,22 @@ class Watcher:
         self.notifier.send(*messages.welcome(summary, r.matching))
         self.store.set("welcomed", iso(now))
         if self.cfg.notify.existing_on_start and r.matching:
-            for row in self.store.active("available").values():
-                self.store.event("new", row["id"], "available", row["price"], at=now)
-            self.details([to_listing(row) for row in self.store.active("available").values()])
+            self.existing("available", now)
 
-    def lottery_off(self) -> None:
-        active = self.store.active("lottery")
+    def existing(self, status: str, now: datetime) -> None:
+        """Announce what already matches (first run with notify.existing_on_start)."""
+        rows = self.store.active(status).values()
+        kind = "interest" if status == "interest" else "new"
+        for row in rows:
+            self.store.event(kind, row["id"], status, row["price"], at=now)
+        self.details([to_listing(row) for row in rows])
+
+    def interest_off(self) -> None:
+        active = self.store.active("interest")
         if active:
-            for pid in active:
-                self.store.retire(pid)
-            self.store.set("baseline:lottery", None)
+            for key in active:
+                self.store.retire(key)
+            self.store.set("baseline:interest", None)
 
     def discover(self, now: datetime) -> None:
         if not self.due("cities_checked", now, DISCOVER_EVERY.total_seconds()):
@@ -177,35 +213,35 @@ class Watcher:
         except Changed as e:
             log.debug("City discovery skipped: %s", e)
             seen = {}
-        self.store.set("cities_seen", {str(k): v for k, v in seen.items()})
+        self.store.set("cities_seen", seen)
         self.store.set("cities_checked", iso(now))
 
+    def wanted_city(self, city: str, country: str) -> bool:
+        search = self.cfg.search
+        if any(catalog.same_city(city, c) for c in search.exclude_cities):
+            return False
+        if search.cities:
+            return any(catalog.same_city(city, c) for c in search.cities)
+        return country == "nl"
+
     def buildings(self, now: datetime) -> None:
-        last = self.store.get("newest_id")
+        """New building pages in codomo.eu's sitemap: a building often shows up before its homes
+        are on sale. The first scan only learns what exists."""
+        first = not self.store.get("buildings_scanned")
         try:
-            top, fresh = newest(self.client, self.cfg.search, last or 0)
-        except H2SError as e:
+            pages = buildings(self.client)
+        except CodomoError as e:
             log.info("Skipped the new building check: %s", e)
             return
-        self.store.set("newest_id", top)
-        groups: dict[str, list[int]] = defaultdict(list)
-        for row in fresh:
-            groups[street_of(row["name"])].append(row["id"])
-        new_streets = [(street, ids) for street, ids in groups.items()
-                       if self.store.building(street, None, len(ids), now) and last is not None]
-        if not new_streets:
-            return
-        reps = [Listing(id=ids[0], name=street, slug="", url="", price=None, status="")
-                for street, ids in new_streets]
-        extra = [int(c) for c in self.store.get("cities_seen", {})]
-        try:
-            describe(self.client, reps, self.cfg.search, extra, budget=12)
-        except H2SError as e:
-            log.info("Couldn't look up where the new buildings are: %s", e)
-        for (street, ids), rep in zip(new_streets, reps, strict=True):
-            self.store.building(street, rep.city, len(ids), now)
-            detail = json.dumps({"street": street, "city": rep.city, "homes": len(ids)})
-            self.store.event("building", None, detail=detail, at=now, notified=False)
+        for country, city_slug, slug in pages:
+            city = catalog.city_label(city_slug)
+            url = f"{self.client.base_url}/homes/{country}/en/{city_slug}/{slug}"
+            name = building_name(slug)
+            fresh = self.store.building(f"{country}/{city_slug}/{slug}", name, city, url, now)
+            if fresh and not first and self.wanted_city(city, country):
+                detail = json.dumps({"name": name, "city": city, "url": url})
+                self.store.event("building", None, detail=detail, at=now, notified=False)
+        self.store.set("buildings_scanned", iso(now))
 
     # Notifications
 
@@ -224,15 +260,15 @@ class Watcher:
         rows = self.store.pending(now - ALERT_TTL)
         if not rows:
             return
-        buildings = [r for r in rows if r["kind"] == "building"]
+        new_buildings = [r for r in rows if r["kind"] == "building"]
         rows = [r for r in rows if r["kind"] != "building"]
         stale = [r["event_id"] for r in rows if not r["active"]]
         if stale:
             self.store.mark_sent(stale)  # taken while we waited, nothing to act on
         rows = [r for r in rows if r["active"]]
-        lottery = [r for r in rows if r["kind"] == "lottery"]
-        others = [r for r in rows if r["kind"] != "lottery"]
-        for group in (others, lottery):
+        interest = [r for r in rows if r["kind"] == "interest"]
+        others = [r for r in rows if r["kind"] != "interest"]
+        for group in (others, interest):
             if not group:
                 continue
             if len(group) > self.cfg.notify.digest_after:
@@ -242,9 +278,9 @@ class Watcher:
                 for r in group:
                     title, body = messages.alert(r["kind"], to_listing(r), r["detail"], now)
                     self._sent([r["event_id"]], self.notifier.send(title, body))
-        for r in buildings:
+        for r in new_buildings:
             info = json.loads(r["detail"])
-            title, body = messages.building(info["street"], catalog.city_label(info["city"]), info["homes"])
+            title, body = messages.building(info["name"], info.get("city") or "", info.get("url"))
             self._sent([r["event_id"]], self.notifier.send(title, body))
 
     def _sent(self, ids: list[int], ok: bool) -> None:
@@ -252,7 +288,7 @@ class Watcher:
 
     # Trouble
 
-    def failed(self, e: H2SError, now: datetime) -> float:
+    def failed(self, e: CodomoError, now: datetime) -> float:
         n = int(self.store.get("failures", 0)) + 1
         self.store.set("failures", n)
         since = parse(self.store.get("failing_since")) or now
@@ -289,4 +325,4 @@ class Watcher:
             self.notifier.send(*messages.resumed())
         for key in ("failures", "failing_since", "health_notified", "pause_until"):
             self.store.set(key, None)
-        log.info("Holland2Stay answers again")
+        log.info("Codomo answers again")

@@ -1,8 +1,8 @@
 name: Upstream check
 
-# Once a day: does Holland2Stay still answer the way this tool expects?
+# Once a day: does codomo.eu still answer the way this tool expects?
 # Broken: the run fails (GitHub emails you) and an issue is opened, closed again once it works.
-# Something new (city ids, Codomo going live): a separate issue, the run stays green.
+# Something new (a city): a separate issue, the run stays green.
 
 on:
   schedule:
@@ -26,14 +26,15 @@ jobs:
           python-version: "3.12"
       - run: pip install .
 
-      - name: Check Holland2Stay
+      - name: Check codomo.eu
         id: check
         run: |
           set +e
-          h2s-alerts upstream --markdown report.md
+          codomo-alerts upstream --markdown report.md
           rc=$?
-          # Cloudflare sometimes challenges cloud servers; one retry tells a blip from a change
-          if [ $rc -ne 0 ]; then sleep 300; h2s-alerts upstream --markdown report.md; rc=$?; fi
+          # Cloudflare sometimes challenges cloud servers and Codomo has short maintenance windows;
+          # one retry tells a blip from a change
+          if [ $rc -ne 0 ]; then sleep 300; codomo-alerts upstream --markdown report.md; rc=$?; fi
           echo "failed=$([ $rc -ne 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           cat report.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -43,8 +44,8 @@ jobs:
           FAILED: ${{ steps.check.outputs.failed }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          broken="Holland2Stay changed something, alerts may be broken"
-          news="Holland2Stay added something new"
+          broken="Codomo changed something, alerts may be broken"
+          news="Codomo added something new"
           gh label create upstream --color 0E0E10 --description "Found by the daily upstream check" 2>/dev/null || true
 
           find_issue() {
@@ -63,7 +64,7 @@ jobs:
             {
               cat body.md
               echo
-              echo "Run \`h2s-alerts upstream\` on your own machine to see if it is only GitHub's servers."
+              echo "Run \`codomo-alerts upstream\` on your own machine to see if it is only GitHub's servers."
             } > broken.md
             if [ -n "$open" ]; then gh issue edit "$open" --body-file broken.md
             else gh issue create --title "$broken" --label upstream --body-file broken.md; fi

@@ -1,4 +1,4 @@
-"""Sample data so the dashboard can be tried without contacting Holland2Stay."""
+"""Sample data so the dashboard can be tried without contacting Codomo."""
 
 from __future__ import annotations
 
@@ -16,14 +16,14 @@ from .store import Store, iso, utcnow
 
 STREETS = ["Parklaan", "Kanaalstraat", "Stationsplein", "Molenweg", "Havenkade", "Lindelaan",
            "Torenstraat", "Brugstraat", "Singelpark", "Vondelkade", "Lichttoren", "Dijkgraaf"]
-CITIES = [29, 25, 24]
-PRICES = {104: (780, 1250), 6137: (1150, 1650), 105: (1250, 1795)}
-DEMO_URL = "https://www.holland2stay.com/residences"
+CITIES = ["Eindhoven", "Rotterdam", "Amsterdam"]
+PRICES = {0: (780, 1250), 1: (1150, 1795)}
+DEMO_URL = "https://codomo.eu/homes/nl/en"
 
 
 def demo_config() -> Config:
     cfg = Config()
-    cfg.search = Search(cities=CITIES, bedrooms=list(PRICES), price_max=1800, contracts=[21, 6125, 20])
+    cfg.search = Search(cities=CITIES, bedrooms=list(PRICES), price_max=1800, contracts=["indefinite", "2y", "1y"])
     return cfg
 
 
@@ -31,10 +31,11 @@ def _home(rng: random.Random, pid: int, status: str = "available") -> Listing:
     bedrooms = rng.choice(list(PRICES))
     lo, hi = PRICES[bedrooms]
     street = rng.choice(STREETS)
-    return Listing(id=pid, name=f"{street} {rng.randint(1, 240)}{rng.choice(['', '', '-A', '-B', ' K2'])}",
-                   slug="", url=DEMO_URL, price=float(rng.randrange(lo, hi, 5)), status=status,
-                   city=rng.choice(CITIES), bedrooms=bedrooms, contract=rng.choice([21, 21, 21, 6125]),
-                   furnishing=rng.choice([70, 6261, 6261, 72]))
+    return Listing(id=f"demo-{pid}", name=f"{street} {rng.randint(1, 240)}{rng.choice(['', '', '-A', '-B', ' K2'])}",
+                   url=DEMO_URL, price=float(rng.randrange(lo, hi, 5)), status=status,
+                   city=rng.choice(CITIES), bedrooms=bedrooms, contract=rng.choice(["indefinite"] * 3 + ["2y"]),
+                   furnishing=rng.choice(["fully-furnished", "furnished", "furnished", "semi-furnished"]),
+                   interest=rng.randint(8, 120) if status == "interest" else None)
 
 
 def _release_time(rng: random.Random, days_ago: int):
@@ -82,15 +83,15 @@ def fill(store: Store, seed: int = 7) -> None:
     store.event("back", back.id, "available", back.price, at=now - timedelta(minutes=22), notified=True)
     pid += 2
     for i in range(3):
-        x = _home(rng, pid + i, "lottery")
+        x = _home(rng, pid + i, "interest")
         store.activate(x, now - timedelta(days=2), new_period=True)
-        store.event("lottery", x.id, "lottery", x.price, at=now - timedelta(days=2), notified=True)
+        store.event("interest", x.id, "interest", x.price, at=now - timedelta(days=2), notified=True)
 
     first = now - timedelta(days=60)
-    store.building("Oude Haven", 25, 40, first)  # learned on the first scan, hidden
-    store.building("Noorderpark", 24, 96, now - timedelta(days=9))
-    store.building("Strijp Laan", 29, 34, now - timedelta(days=3))
-    store.event("building", None, detail=json.dumps({"street": "Strijp Laan", "city": 29, "homes": 34}),
+    store.building("nl/rotterdam/oude-haven", "Oude Haven", "Rotterdam", DEMO_URL, first)  # first scan, hidden
+    store.building("nl/amsterdam/noorderpark", "Noorderpark", "Amsterdam", DEMO_URL, now - timedelta(days=9))
+    store.building("nl/eindhoven/strijp-laan", "Strijp Laan", "Eindhoven", DEMO_URL, now - timedelta(days=3))
+    store.event("building", None, detail=json.dumps({"name": "Strijp Laan", "city": "Eindhoven", "url": DEMO_URL}),
                 at=now - timedelta(days=3))
     store.set("status", {"state": "watching", "message": "", "last_check": iso(now),
                          "next_check": iso(now + timedelta(seconds=97)), "window": "release hours"})
@@ -116,7 +117,7 @@ def export(directory: Path, seed: int = 7) -> Path:
 
 
 def temp_store(seed: int = 7) -> tuple[Store, Config, Path]:
-    folder = Path(tempfile.mkdtemp(prefix="h2s-demo-"))
+    folder = Path(tempfile.mkdtemp(prefix="codomo-demo-"))
     store = Store(folder / "demo.sqlite3")
     fill(store, seed)
     return store, demo_config(), folder

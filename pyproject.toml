@@ -3,15 +3,15 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "holland2stay-alerts"
+name = "codomo-alerts"
 dynamic = ["version"]
-description = "Self-hosted alerts for new Holland2Stay and Codomo residences."
+description = "Self-hosted alerts for new Codomo homes (formerly Holland2Stay)."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Koorosh Komeilizadeh" }]
 requires-python = ">=3.11"
-keywords = ["holland2stay", "codomo", "netherlands", "housing", "rental", "alerts", "self-hosted"]
+keywords = ["codomo", "holland2stay", "netherlands", "housing", "rental", "alerts", "self-hosted"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -36,19 +36,18 @@ mcp = ["mcp>=1.2"]
 dev = ["pytest>=8", "ruff>=0.6"]
 
 [project.urls]
-Homepage = "https://kooroshkz.github.io/holland2stay-alerts"
-Source = "https://github.com/kooroshkz/holland2stay-alerts"
-Issues = "https://github.com/kooroshkz/holland2stay-alerts/issues"
+Homepage = "https://kooroshkz.github.io/codomo-alerts"
+Source = "https://github.com/kooroshkz/codomo-alerts"
+Issues = "https://github.com/kooroshkz/codomo-alerts/issues"
 
 [project.scripts]
-h2s-alerts = "h2s_alerts.cli:main"
-holland2stay-alerts = "h2s_alerts.cli:main"
+codomo-alerts = "codomo_alerts.cli:main"
 
 [tool.hatch.version]
-path = "src/h2s_alerts/__init__.py"
+path = "src/codomo_alerts/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/h2s_alerts"]
+packages = ["src/codomo_alerts"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "README.md", "LICENSE", "config.example.toml"]

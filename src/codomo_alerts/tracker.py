@@ -16,7 +16,7 @@ PRICE_STEP = 1.0            # ignore rounding noise
 
 @dataclass
 class Change:
-    kind: str               # new, back, bookable, lottery, price, gone
+    kind: str               # new, back, bookable, interest, price, gone
     listing: Listing
     detail: str | None = None
 
@@ -35,7 +35,7 @@ class Tracker:
         self.store = store
         self.fingerprint = fingerprint
 
-    def apply(self, status: str, current: dict[int, Listing], now: datetime) -> Result:
+    def apply(self, status: str, current: dict[str, Listing], now: datetime) -> Result:
         store = self.store
         result = Result(status=status, matching=len(current))
         key = f"baseline:{status}"
@@ -68,15 +68,15 @@ class Tracker:
                 continue
 
             if row is None:
-                kind = "lottery" if status == "lottery" else "new"
+                kind = "interest" if status == "interest" else "new"
             elif row["active"] and row["status"] != status:
-                kind = "bookable" if status == "available" else "lottery"
+                kind = "bookable" if status == "available" else "interest"
             elif row["gone_at"] and now - parse(row["gone_at"]) < FLICKER:
                 kind = None
             elif row["gone_at"]:
-                kind = "lottery" if status == "lottery" else "back"
+                kind = "interest" if status == "interest" else "back"
             else:
-                kind = "lottery" if status == "lottery" else "new"
+                kind = "interest" if status == "interest" else "new"
             store.activate(x, now, new_period=kind is not None)
             if kind:
                 result.changes.append(Change(kind, x))

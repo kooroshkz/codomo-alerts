@@ -5,9 +5,9 @@ import urllib.request
 
 import pytest
 
-from h2s_alerts import demo
-from h2s_alerts.config import build
-from h2s_alerts.dashboard import overview, serve
+from codomo_alerts import demo
+from codomo_alerts.config import build
+from codomo_alerts.dashboard import overview, serve
 
 
 @pytest.fixture
@@ -40,15 +40,16 @@ def test_overview_shape():
     data = overview(store, cfg)
     assert data["stats"]["matching"] == len(data["available"]) > 0
     assert len(data["heatmap"]) == 7 and all(len(row) == 24 for row in data["heatmap"])
-    assert data["lottery"]
-    assert [b["street"] for b in data["buildings"]] == ["Strijp Laan", "Noorderpark"]
+    assert data["interest"] and all(h["interest"] for h in data["interest"])
+    assert [b["name"] for b in data["buildings"]] == ["Strijp Laan", "Noorderpark"]
+    assert data["available"][0]["city"] in ("Eindhoven", "Rotterdam", "Amsterdam")
     assert data["stats"]["median_minutes"] > 0
 
 
 def test_pages_and_api(running):
     base = running()
     status, ctype, body = get(base + "/")
-    assert status == 200 and "text/html" in ctype and b"holland2stay" in body
+    assert status == 200 and "text/html" in ctype and b"codomo" in body and b"holland2stay-alerts" not in body
     assert get(base + "/app.js")[0] == 200
     status, _, body = get(base + "/api/overview")
     assert json.loads(body)["version"]

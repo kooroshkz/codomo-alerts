@@ -19,20 +19,21 @@ from datetime import timedelta
 from pathlib import Path
 
 from . import __version__, catalog, messages, schedule
-from .client import Client, H2SError
+from .client import Client, CodomoError
 from .config import Config, ConfigError, build, load
 from .notify import Notifier, masked
 from .runtime import AlreadyRunning, Lock, db_path, setup_logging
-from .search import describe, discover_cities, fetch
+from .search import contract, discover_cities, fetch
 from .store import Store, iso, parse, utcnow
 from .term import bad, bold, dim, ok, table, warn
 
-log = logging.getLogger("h2s_alerts")
+log = logging.getLogger("codomo_alerts")
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+LIST_PAGES = 30     # home pages `list` reads for the maximum stay
 
 
 def _configured(cfg: Config) -> bool:
-    return cfg.source is not None or any(k.startswith("H2S_") for k in os.environ)
+    return cfg.source is not None or any(k.startswith("CODOMO_") for k in os.environ)
 
 
 # Commands
@@ -48,7 +49,7 @@ def cmd_watch(cfg: Config, args) -> int:
     setup_logging("DEBUG" if args.verbose else cfg.log_level)
     for w in cfg.warnings:
         log.warning(w)
-    log.info("holland2stay-alerts %s", __version__)
+    log.info("codomo-alerts %s", __version__)
     log.info("Search: %s", cfg.search.summary())
     notifier = Notifier(cfg.notify.urls)
     for url in notifier.invalid:
@@ -108,60 +109,63 @@ def cmd_list(cfg: Config, args) -> int:
         cfg.search.cities = build({"search": {"cities": args.city}}, {}).search.cities
         cfg.search.exclude_cities = []
     client = Client(cfg.base_url)
-    status = "lottery" if args.lottery else "available"
+    status = "interest" if args.interest else "available"
     store = Store(db_path(cfg)) if db_path(cfg).exists() else None
     try:
         found = sorted(fetch(client, cfg.search, status).values(), key=lambda x: x.price or 0)
         if store:
             for x in found:
                 store.known_details(x)
-        extra = [int(c) for c in store.get("cities_seen", {})] if store else []
-        describe(client, [x for x in found if None in (x.city, x.bedrooms, x.contract)], cfg.search, extra,
-                 budget=40)
-    except H2SError as e:
+        # the maximum stay is only on each home's own page
+        for x in [x for x in found if x.contract is None][:LIST_PAGES]:
+            x.contract = contract(client, x)
+        if cfg.search.contracts:
+            found = [x for x in found if catalog.contract_ok(x.contract, cfg.search.contracts)
+                     or x.contract is None]
+    except CodomoError as e:
         print(bad(str(e)), file=sys.stderr)
         return 1
     if args.json:
         print(json.dumps([{"name": x.name, "url": x.url, "price": x.price, "city": x.city_name,
                            "bedrooms": x.bedrooms_name, "contract": x.contract_name,
-                           "furnishing": x.furnishing_name, "status": x.status} for x in found], indent=2))
+                           "furnishing": x.furnishing_name, "status": x.status, "interest": x.interest}
+                          for x in found], indent=2))
         return 0
     print(dim(cfg.search.summary()))
     if not found:
         print("Nothing matches right now.")
         return 0
-    rows = [[messages.money(x.price), x.name, x.city_name, x.bedrooms_name, x.contract_name] for x in found]
+    rows = [[messages.money(x.price), x.name, x.city_name, x.bedrooms_name, x.contract_name or "?"]
+            for x in found]
     print(table(rows, right={0}))
     print()
     for x in found[:3]:
         print(dim(x.url))
     more = f", {len(found) - 3} more links with --json" if len(found) > 3 else ""
     print(dim(f"{len(found)} home{'s' if len(found) != 1 else ''}{more}"))
-    if args.lottery:
-        print(dim(messages.deadline()))
+    if args.interest:
+        print(dim(messages.SHORTLIST))
     return 0
 
 
 def cmd_cities(cfg: Config, args) -> int:
-    names: dict[str, list[int]] = {}
-    for cid, name in catalog.CITIES.items():
-        names.setdefault(name, []).append(cid)
-    rows = [[name, ", ".join(map(str, ids)), catalog.ABROAD.get(ids[0], "")] for name, ids in sorted(names.items())]
+    rows = [[name, catalog.MARKETS[market] if market != "nl" else ""] for name, market in sorted(catalog.CITIES.items())]
     print(table(rows))
     try:
-        unknown = [c for c in discover_cities(Client(cfg.base_url)) if c not in catalog.CITIES]
-    except H2SError:
+        live = discover_cities(Client(cfg.base_url))
+        unknown = [c for c in live if not any(catalog.same_city(c, k) for k in catalog.CITIES)]
+    except CodomoError:
         unknown = []
     if unknown:
         print()
-        print(warn("New city ids on Holland2Stay: " + ", ".join(map(str, unknown))))
-        print(dim("You can use the number in your config until the name is added."))
+        print(warn("New cities on Codomo: " + ", ".join(unknown)))
+        print(dim("Update codomo-alerts to use them in your search."))
     return 0
 
 
 def cmd_test(cfg: Config, args) -> int:
     if not cfg.notify.urls:
-        print(warn("No notification links in your config. Run h2s-alerts init or set H2S_NOTIFY."))
+        print(warn("No notification links in your config. Run codomo-alerts init or set CODOMO_NOTIFY."))
         return 1
     results = Notifier(cfg.notify.urls).test(*messages.test())
     for url, sent in results:
@@ -193,7 +197,7 @@ def cmd_doctor(cfg: Config, args) -> int:
             print(bad(f"Notification link not understood: {masked(url)}"))
     if notifier.enabled:
         print(ok(f"Notifications: {len(notifier.apprise)} channel{'s' if len(notifier.apprise) != 1 else ''}"
-                 " (send one with h2s-alerts test)"))
+                 " (send one with codomo-alerts test)"))
     else:
         print(warn("Notifications: none set, alerts only go to the log and the dashboard"))
 
@@ -202,10 +206,10 @@ def cmd_doctor(cfg: Config, args) -> int:
     try:
         found = fetch(client, cfg.search, "available")
         ms = int((time.monotonic() - started) * 1000)
-        print(ok(f"Holland2Stay: {len(found)} home{'s' if len(found) != 1 else ''} match right now ({ms} ms)"))
-    except H2SError as e:
+        print(ok(f"Codomo: {len(found)} home{'s' if len(found) != 1 else ''} match right now ({ms} ms)"))
+    except CodomoError as e:
         good = False
-        print(bad(f"Holland2Stay: {e}"))
+        print(bad(f"Codomo: {e}"))
 
     if cfg.dashboard.enabled:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -225,7 +229,7 @@ def cmd_doctor(cfg: Config, args) -> int:
 def cmd_stats(cfg: Config, args) -> int:
     path = db_path(cfg)
     if not path.exists():
-        print("No data yet. Start the watcher first: h2s-alerts watch")
+        print("No data yet. Start the watcher first: codomo-alerts watch")
         return 1
     store = Store(path)
     first = store.q("SELECT MIN(at) FROM checks")[0][0]
@@ -313,11 +317,11 @@ def cmd_mcp(cfg: Config, args) -> int:
 # Parser
 
 def parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="h2s-alerts",
-                                description="Alerts for new Holland2Stay and Codomo homes.")
+    p = argparse.ArgumentParser(prog="codomo-alerts",
+                                description="Alerts for new Codomo homes (formerly Holland2Stay).")
     p.add_argument("--config", metavar="PATH", help="config file (default: ./config.toml or ~/.config/...)")
     p.add_argument("-v", "--verbose", action="store_true", help="more logging")
-    p.add_argument("--version", action="version", version=f"holland2stay-alerts {__version__}")
+    p.add_argument("--version", action="version", version=f"codomo-alerts {__version__}")
     # the config and verbose options also work after the command name
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--config", metavar="PATH", default=argparse.SUPPRESS, help="config file")
@@ -329,7 +333,7 @@ def parser() -> argparse.ArgumentParser:
     w.add_argument("--no-dashboard", action="store_true", help="don't start the dashboard")
     w.add_argument("--port", type=int, help="dashboard port")
     li = sub.add_parser("list", parents=[common], help="show what matches right now")
-    li.add_argument("--lottery", action="store_true", help="lottery homes instead")
+    li.add_argument("--interest", action="store_true", help="register-interest homes instead")
     li.add_argument("--city", action="append", help="only this city (repeat for more)")
     li.add_argument("--json", action="store_true", help="machine readable output")
     sub.add_parser("cities", parents=[common], help="city names you can use")
@@ -341,7 +345,7 @@ def parser() -> argparse.ArgumentParser:
     d.add_argument("--export", metavar="DIR", help="write a static copy instead of serving it")
     sub.add_parser("mcp", parents=[common], help="MCP server for AI assistants")
     sub.add_parser("health", parents=[common], help="exit 0 when the watcher is running")
-    up = sub.add_parser("upstream", parents=[common], help="check that Holland2Stay still works the same way")
+    up = sub.add_parser("upstream", parents=[common], help="check that codomo.eu still works the same way")
     up.add_argument("--markdown", metavar="FILE", help="also write a Markdown report")
     return p
 
@@ -371,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
     command = args.command or "watch"
     if command == "watch" and not args.command and not _configured(cfg):
         p.print_help()
-        print(f"\nNew here? Run {bold('h2s-alerts init')} to set up your search.")
+        print(f"\nNew here? Run {bold('codomo-alerts init')} to set up your search.")
         return 1
     if command == "watch" and not hasattr(args, "once"):
         args.once, args.no_dashboard, args.port = False, False, None

@@ -16,7 +16,7 @@ from . import PROJECT_URL, __version__, catalog, schedule
 from .config import Config
 from .store import Store, iso, parse, utcnow
 
-log = logging.getLogger("h2s_alerts")
+log = logging.getLogger("codomo_alerts")
 
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
@@ -34,10 +34,11 @@ def _row(r) -> dict:
         "name": r["name"],
         "url": r["url"],
         "price": r["price"],
-        "city": catalog.city_label(r["city"]) if r["city"] else "",
-        "bedrooms": catalog.BEDROOMS.get(r["bedrooms"], "") if r["bedrooms"] else "",
-        "contract": catalog.CONTRACTS.get(r["contract"], "") if r["contract"] else "",
-        "furnishing": catalog.FURNISHING.get(r["furnishing"], "") if r["furnishing"] else "",
+        "city": catalog.city_label(r["city"]),
+        "bedrooms": catalog.bedrooms_label(r["bedrooms"]),
+        "contract": catalog.contract_label(r["contract"]),
+        "furnishing": catalog.FURNISHING.get(r["furnishing"] or "", ""),
+        "interest": r["interest"],
         "since": r["listed_at"] or r["first_seen"],
     }
 
@@ -53,8 +54,8 @@ def overview(store: Store, cfg: Config) -> dict:
 
     available = [_row(r) for r in store.q(
         "SELECT * FROM listings WHERE active=1 AND status='available' ORDER BY COALESCE(listed_at, first_seen) DESC")]
-    lottery = [_row(r) for r in store.q(
-        "SELECT * FROM listings WHERE active=1 AND status='lottery' ORDER BY price")]
+    interest = [_row(r) for r in store.q(
+        "SELECT * FROM listings WHERE active=1 AND status='interest' ORDER BY price")]
 
     durations = [int(r["detail"]) for r in store.q(
         "SELECT detail FROM events WHERE kind='gone' AND status='available' AND at>=? AND detail IS NOT NULL",
@@ -64,14 +65,14 @@ def overview(store: Store, cfg: Config) -> dict:
     for r in store.q("""SELECT e.kind, e.at, e.price AS event_price, e.detail, l.name, l.url, l.city
                         FROM events e LEFT JOIN listings l ON l.id = e.listing_id
                         ORDER BY e.at DESC, e.id DESC LIMIT 40"""):
-        name, city = r["name"] or "", catalog.city_label(r["city"]) if r["city"] else ""
+        name, city, url = r["name"] or "", catalog.city_label(r["city"]), r["url"]
         if r["kind"] == "building":
             try:
                 info = json.loads(r["detail"])
-                name, city = info["street"], catalog.city_label(info.get("city"))
+                name, city, url = info["name"], info.get("city") or "", info.get("url")
             except (TypeError, ValueError, KeyError):
                 name = r["detail"] or ""
-        events.append({"kind": r["kind"], "at": r["at"], "name": name, "url": r["url"],
+        events.append({"kind": r["kind"], "at": r["at"], "name": name, "url": url,
                        "city": city, "price": r["event_price"],
                        "detail": None if r["kind"] == "building" else r["detail"]})
 
@@ -84,9 +85,8 @@ def overview(store: Store, cfg: Config) -> dict:
     for x in available:
         cities[x["city"] or "Unknown"] = cities.get(x["city"] or "Unknown", 0) + 1
 
-    buildings = [{"street": r["street"], "city": catalog.city_label(r["city"]) if r["city"] else "",
-                  "homes": r["homes"], "since": r["first_seen"]}
-                 for r in store.q("SELECT * FROM buildings ORDER BY first_seen DESC, street LIMIT 8")]
+    buildings = [{"name": r["name"], "city": r["city"] or "", "url": r["url"], "since": r["first_seen"]}
+                 for r in store.q("SELECT * FROM buildings ORDER BY first_seen DESC, name LIMIT 8")]
     first_building = store.q("SELECT MIN(first_seen) FROM buildings")[0][0]
     # the first scan only learns what exists, so hide that batch
     buildings = [b for b in buildings if b["since"] != first_building]
@@ -97,8 +97,8 @@ def overview(store: Store, cfg: Config) -> dict:
         "project": PROJECT_URL,
         "now": iso(now),
         "status": status,
-        "search": {"summary": cfg.search.summary(), "lottery": cfg.search.lottery,
-                   "deadline": iso(schedule.lottery_deadline()), "notify": len(cfg.notify.urls)},
+        "search": {"summary": cfg.search.summary(), "interest": cfg.search.interest,
+                   "notify": len(cfg.notify.urls)},
         "stats": {
             "matching": len(available),
             "new_week": count(f"SELECT COUNT(*) FROM events WHERE kind IN {ALERTS} AND status='available' AND at>=?",
@@ -110,7 +110,7 @@ def overview(store: Store, cfg: Config) -> dict:
             "errors_day": count("SELECT COUNT(*) FROM checks WHERE at>=? AND ok=0", (day,)),
         },
         "available": available,
-        "lottery": lottery,
+        "interest": interest,
         "events": events,
         "heatmap": heat,
         "cities": sorted(({"name": k, "count": v} for k, v in cities.items()), key=lambda c: -c["count"]),
@@ -119,14 +119,14 @@ def overview(store: Store, cfg: Config) -> dict:
 
 
 def static_file(name: str) -> bytes:
-    return resources.files("h2s_alerts").joinpath("web", name).read_bytes()
+    return resources.files("codomo_alerts").joinpath("web", name).read_bytes()
 
 
 def make_handler(store: Store, cfg: Config, demo: bool = False):
     password = cfg.dashboard.password
 
     class Handler(BaseHTTPRequestHandler):
-        server_version = "holland2stay-alerts"
+        server_version = "codomo-alerts"
 
         def log_message(self, fmt, *args):
             log.debug("dashboard: " + fmt, *args)
@@ -167,7 +167,7 @@ def make_handler(store: Store, cfg: Config, demo: bool = False):
                 return self._send(200, body, "application/json")
             if not self._authorized():
                 return self._send(401, b"Password required", "text/plain",
-                                  {"WWW-Authenticate": 'Basic realm="holland2stay-alerts"'})
+                                  {"WWW-Authenticate": 'Basic realm="codomo-alerts"'})
             if path in ("/api/overview", "/api/overview.json"):
                 try:
                     data = overview(store, cfg)

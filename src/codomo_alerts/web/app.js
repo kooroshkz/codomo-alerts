@@ -3,9 +3,9 @@
   const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const TAGS = {
     new: "New", back: "Back", bookable: "Bookable", price: "Price drop",
-    lottery: "Lottery", gone: "Taken", building: "Building",
+    interest: "Shortlist", gone: "Taken", building: "Building",
   };
-  const HOT = new Set(["new", "back", "bookable", "price", "lottery"]);
+  const HOT = new Set(["new", "back", "bookable", "price", "interest"]);
   let data = null;
 
   const $ = (id) => document.getElementById(id);
@@ -122,7 +122,7 @@
   function render() {
     renderState();
     $("search").textContent = data.search.summary;
-    document.title = `${data.stats.matching} · holland2stay alerts`;
+    document.title = `${data.stats.matching} · codomo alerts`;
     $("version").textContent = `v${data.version}`;
 
     const s = data.stats;
@@ -136,9 +136,9 @@
     $("available-count").textContent = data.available.length ? String(data.available.length) : "";
     fill($("available"), data.available, (h) => homeRow(h), "Nothing matches right now. You'll get a message when something does.");
 
-    $("lottery-box").hidden = !data.lottery.length;
-    $("lottery-deadline").textContent = `closes ${clock(data.search.deadline)}`;
-    fill($("lottery"), data.lottery, (h) => homeRow(h, "lottery"), "");
+    $("interest-box").hidden = !data.interest.length;
+    fill($("interest"), data.interest, (h) => homeRow(h, h.interest === null || h.interest === undefined
+      ? "shortlist" : `${h.interest} interested`), "");
 
     fill($("events"), data.events, (e) => {
       const li = el("li");
@@ -172,9 +172,10 @@
     $("buildings-box").hidden = !data.buildings.length;
     fill($("buildings"), data.buildings, (b) => {
       const li = el("li");
-      const row = el("div", "row");
+      const row = el(b.url ? "a" : "div", b.url ? null : "row");
+      if (b.url) { row.href = b.url; row.target = "_blank"; row.rel = "noopener"; }
       const left = el("div");
-      left.append(el("div", "name", b.street), el("div", "meta", join([b.city, `${b.homes} homes`])));
+      left.append(el("div", "name", b.name), el("div", "meta", b.city));
       row.append(left, el("div", "when", `seen ${ago(b.since)}`));
       li.append(row);
       return li;
@@ -195,7 +196,7 @@
 
   // The star pill goes away for good once it's closed or clicked.
   const star = $("star");
-  const STAR_KEY = "h2s-star-hidden";
+  const STAR_KEY = "codomo-alerts-star-hidden";
   const hideStar = () => {
     star.classList.add("gone");
     try { localStorage.setItem(STAR_KEY, "1"); } catch (e) { /* private mode */ }

@@ -1,4 +1,4 @@
-"""`h2s-alerts init`: a few questions, then a config file."""
+"""`codomo-alerts init`: a few questions, then a config file."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from pathlib import Path
 import apprise
 
 from . import PROJECT_URL, catalog, messages
-from .client import Client, H2SError
-from .config import ConfigError, build, load
+from .client import Client, CodomoError
+from .config import NAME, ConfigError, build, load
 from .notify import Notifier
 from .search import fetch
 from .term import ask, bad, bold, dim, ok, warn, yes
@@ -26,7 +26,7 @@ EXAMPLES = [
 
 def default_path() -> Path:
     xdg = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-    return xdg / "holland2stay-alerts" / "config.toml"
+    return xdg / NAME / "config.toml"
 
 
 def _valid(section: str, key: str, value) -> str | None:
@@ -49,7 +49,7 @@ def _ask_list(question: str, key: str, default: str = "") -> list[str]:
 
 def _ask_price() -> int | None:
     while True:
-        answer = ask("Max price per month in euro (empty for no limit):")
+        answer = ask("Max price per month in euro, service costs included (empty for no limit):")
         if not answer:
             return None
         clean = "".join(c for c in answer if c not in "€,. ")
@@ -81,7 +81,7 @@ def _toml(search: dict, urls: list[str]) -> str:
     def value(v) -> str:
         return json.dumps(v, ensure_ascii=False) if not isinstance(v, bool) else str(v).lower()
 
-    lines = [f"# holland2stay-alerts settings. All options: {PROJECT_URL}#configuration", "", "[search]"]
+    lines = [f"# codomo-alerts settings. All options: {PROJECT_URL}#configuration", "", "[search]"]
     for key, v in search.items():
         if v not in (None, [], ""):
             lines.append(f"{key} = {value(v)}")
@@ -92,25 +92,24 @@ def _toml(search: dict, urls: list[str]) -> str:
 
 def run(path: str | None = None) -> int:
     target = Path(path).expanduser() if path else default_path()
-    print(bold("holland2stay-alerts setup"))
+    print(bold("codomo-alerts setup"))
     print(dim("Press enter to skip a question.\n"))
     if target.exists() and not yes(f"{target} exists. Replace it?", default=False):
         print("Nothing changed.")
         return 1
 
-    known = sorted(set(catalog.CITIES.values()))
-    print(dim("Cities: " + ", ".join(known)))
-    cities = _ask_list("Which cities? (comma separated, empty for all):", "cities")
-    bedrooms = _ask_list("Bedrooms? studio, loft, 1, 2, 3, 4 or 2+ (empty for any):", "bedrooms")
+    print(dim("Cities: " + ", ".join(catalog.CITIES)))
+    cities = _ask_list("Which cities? (comma separated, empty for all of the Netherlands):", "cities")
+    bedrooms = _ask_list("Bedrooms? studio, 1, 2, 3, 4 or 2+ (empty for any):", "bedrooms")
     price_max = _ask_price()
     contract = ask("Contract? long, short or any:", "any").strip().lower()
     while contract not in ("long", "short", "any"):
         contract = ask("Please type long, short or any:", "any").strip().lower()
-    lottery = yes("Also tell you about lottery homes?", default=True)
+    interest = yes("Also tell you about register-interest homes (Codomo picks from a shortlist)?", default=True)
     urls = _ask_urls()
 
     search = {"cities": cities, "bedrooms": bedrooms, "price_max": price_max,
-              "contract": [] if contract == "any" else [contract], "lottery": lottery}
+              "contract": [] if contract == "any" else [contract], "interest": interest}
     target.parent.mkdir(parents=True, exist_ok=True)
     # notification links are secrets: private from the first byte
     fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -128,8 +127,8 @@ def run(path: str | None = None) -> int:
         print(ok(f"{len(found)} home{'s' if len(found) != 1 else ''} match right now"))
         for x in sorted(found.values(), key=lambda x: x.price or 0)[:5]:
             print(dim(f"  {messages.money(x.price):>7}  {x.name}"))
-    except H2SError as e:
-        print(warn(f"Couldn't check Holland2Stay right now: {e}"))
+    except CodomoError as e:
+        print(warn(f"Couldn't check Codomo right now: {e}"))
 
     if urls and yes("Send a test message?", default=True):
         for url, sent in Notifier(urls).test(*messages.test()):
@@ -139,5 +138,5 @@ def run(path: str | None = None) -> int:
 
     flag = "" if target == default_path() else f" --config {target}"
     print()
-    print(f"Start watching:  {bold('h2s-alerts' + flag + ' watch')}")
+    print(f"Start watching:  {bold('codomo-alerts' + flag + ' watch')}")
     return 0

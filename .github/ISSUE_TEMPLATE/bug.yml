@@ -12,7 +12,7 @@ body:
   - type: textarea
     id: doctor
     attributes:
-      label: Output of `h2s-alerts doctor`
+      label: Output of `codomo-alerts doctor`
       description: Remove notification links and passwords first.
       render: text
   - type: textarea

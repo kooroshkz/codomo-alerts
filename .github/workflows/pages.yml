@@ -3,7 +3,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ["docs/**", "src/h2s_alerts/web/**", "src/h2s_alerts/demo.py", ".github/workflows/pages.yml"]
+    paths: ["docs/**", "src/codomo_alerts/web/**", "src/codomo_alerts/demo.py", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p site
           cp -r docs/* site/
-          h2s-alerts demo --export site/demo
+          codomo-alerts demo --export site/demo
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

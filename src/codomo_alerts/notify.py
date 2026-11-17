@@ -6,7 +6,7 @@ import logging
 
 import apprise
 
-log = logging.getLogger("h2s_alerts")
+log = logging.getLogger("codomo_alerts")
 logging.getLogger("apprise").setLevel(logging.WARNING)
 
 

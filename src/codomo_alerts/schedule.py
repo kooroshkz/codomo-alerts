@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import random
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 from .config import MIN_INTERVAL, Schedule
 
 AMS = ZoneInfo("Europe/Amsterdam")
 
-# Most homes are released on weekdays during office hours, plus a small batch
-# just after midnight when unpaid reservations go back on sale.
+# Most homes are released on weekdays during office hours, plus a small batch just after
+# midnight when unpaid reservations go back on sale (seen again on Codomo, 2026-11-16 00:16).
 RELEASE_WINDOWS = [
     (range(0, 5), time(8, 30), time(18, 0)),
     (range(0, 7), time(0, 5), time(0, 45)),
 ]
 DAY = (time(7, 0), time(23, 30))
-# New lottery homes go live on Tuesday at 17:00, sometimes a bit later.
-LOTTERY_OPENING = (1, time(16, 50), time(18, 30))
-LOTTERY_DEADLINE = (6, time(20, 0))
 
 
 def local(now: datetime | None = None) -> datetime:
@@ -50,21 +47,9 @@ def next_delay(s: Schedule, now: datetime | None = None, rng: random.Random | No
     return _jitter(base, s.jitter, rng)
 
 
-def lottery_due_every(s: Schedule, now: datetime | None = None) -> float:
-    n = local(now)
-    day, start, end = LOTTERY_OPENING
-    if n.weekday() == day and _within(n.time(), start, end):
-        return max(MIN_INTERVAL, s.hot)
-    return max(MIN_INTERVAL, s.lottery)
-
-
-def lottery_deadline(now: datetime | None = None) -> datetime:
-    """The next Sunday 20:00, when lottery sign-ups close."""
-    n = local(now)
-    day, at = LOTTERY_DEADLINE
-    d = n + timedelta(days=(day - n.weekday()) % 7)
-    deadline = d.replace(hour=at.hour, minute=at.minute, second=0, microsecond=0)
-    return deadline if deadline > n else deadline + timedelta(days=7)
+def interest_due_every(s: Schedule) -> float:
+    """Register-interest homes have no deadline to race, so they are read less often."""
+    return max(MIN_INTERVAL, s.interest)
 
 
 def quiet(hours: tuple[time, time] | None, now: datetime | None = None) -> bool:
