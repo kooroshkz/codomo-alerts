@@ -22,7 +22,7 @@ def facts(x: Listing) -> str:
 
 
 def terms(x: Listing) -> str:
-    return " · ".join(p for p in (x.contract_name, x.furnishing_name) if p)
+    return " · ".join(p for p in (x.contract_name, x.furnishing_name, x.gender_name) if p)
 
 
 def interested(x: Listing) -> str:

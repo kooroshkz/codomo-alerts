@@ -85,7 +85,7 @@
     a.href = h.url; a.target = "_blank"; a.rel = "noopener";
     const left = el("div");
     left.append(el("div", "name", h.name));
-    left.append(el("div", "meta", join([h.city, h.bedrooms, h.contract, h.furnishing])));
+    left.append(el("div", "meta", join([h.city, h.bedrooms, h.contract, h.furnishing, h.gender])));
     const right = el("div", "side");
     right.append(el("div", "price", money(h.price)));
     right.append(el("div", "when", extra || ago(h.since)));

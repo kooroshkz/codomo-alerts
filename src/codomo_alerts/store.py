@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS listings (
     persons INTEGER,
     available_from TEXT,
     interest INTEGER,
+    gender TEXT,
     active INTEGER NOT NULL DEFAULT 0,
     misses INTEGER NOT NULL DEFAULT 0,
     first_seen TEXT NOT NULL,
@@ -69,9 +70,10 @@ CREATE TABLE IF NOT EXISTS pages (
 );
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 """
-VERSION = 2
+VERSION = 3
 ALERT_KINDS = ("new", "back", "bookable", "price", "interest")
-DETAILS = ("city", "bedrooms", "contract", "furnishing", "building", "persons", "available_from", "interest")
+DETAILS = ("city", "bedrooms", "contract", "furnishing", "building", "persons", "available_from", "interest",
+           "gender")
 
 
 def utcnow() -> datetime:
@@ -103,6 +105,9 @@ class Store:
             self.db.execute("PRAGMA journal_mode=WAL")
             self.db.execute("PRAGMA busy_timeout=5000")
             self.db.executescript(SCHEMA)
+            columns = {r["name"] for r in self.db.execute("PRAGMA table_info(listings)")}
+            if "gender" not in columns:     # added in version 3
+                self.db.execute("ALTER TABLE listings ADD COLUMN gender TEXT")
             self.db.execute(f"PRAGMA user_version={VERSION}")
 
     def close(self) -> None:

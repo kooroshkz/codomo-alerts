@@ -38,6 +38,7 @@ def _row(r) -> dict:
         "bedrooms": catalog.bedrooms_label(r["bedrooms"]),
         "contract": catalog.contract_label(r["contract"]),
         "furnishing": catalog.FURNISHING.get(r["furnishing"] or "", ""),
+        "gender": catalog.GENDERS.get(r["gender"] or "", ""),
         "interest": r["interest"],
         "since": r["listed_at"] or r["first_seen"],
     }

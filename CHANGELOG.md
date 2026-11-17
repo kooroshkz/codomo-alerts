@@ -26,6 +26,20 @@ It is a breaking release.
   first run). The old `holland2stay-alerts` folder can be deleted.
 - Codomo's maintenance page is recognised: a short pause, not "the site changed".
 - `codomo-alerts upstream` checks the list page, a home page, photos and new cities.
+- Every country Codomo rents in: the Netherlands, Spain (Granada), Portugal (Carcavelos,
+  near Lisbon) and Austria (Linz). New setting `countries` (`CODOMO_COUNTRIES`): codes like
+  `nl` or `es`, names like `Spain` or `Österreich`, or `all`. Empty means every country Codomo
+  lists, and a country Codomo opens later is read without an update. With no cities and no
+  countries it now reads every country; set `countries = ["nl"]` to keep only the
+  Netherlands. A city outside the named countries is a config error.
+- New setting `gender` (`CODOMO_GENDER`): `female` or `male` skips rooms Codomo marks for the
+  other gender only. Alerts show "Female only" or "Male only" when Codomo marks a home.
+- Homes without a bedroom count (Portugal and Austria today) count as studios for the
+  `bedrooms` filter.
+- `codomo-alerts init` asks for countries when no cities are given, and for gender when the
+  search reaches Spain, Portugal or Austria. `codomo-alerts cities` lists every city with its
+  country, and the MCP search tool takes a `country`.
+- Website in English, Dutch, Spanish, Portuguese and German.
 
 ## 0.1.0
 

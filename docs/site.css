@@ -71,6 +71,9 @@ code { font-family: var(--mono); font-size: 0.88em; }
 h1 { margin: 0; font-size: clamp(38px, 6vw, 64px); line-height: 1.04; letter-spacing: -0.04em; font-weight: 600; }
 .lead { margin: 22px 0 0; font-size: 19px; color: var(--muted); max-width: 620px; }
 .cta { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+.langs { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 28px 0 0; color: var(--faint); font-size: 14px; }
+.langs a { color: var(--muted); text-decoration: none; }
+.langs a:hover, .langs a[aria-current] { color: var(--fg); }
 .button {
   display: inline-block;
   padding: 11px 20px;
@@ -118,6 +121,12 @@ pre {
 .message .link { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--faint); word-break: break-all; }
 
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid.two-col { grid-template-columns: repeat(2, 1fr); }
+.intro { margin: -8px 0 24px; color: var(--muted); max-width: 680px; }
+.hint { margin: 18px 0 0; color: var(--muted); font-size: 15px; max-width: 760px; }
+.note { margin: 14px 0 0; color: var(--faint); font-size: 13.5px; }
+.more-link { display: inline-block; margin-top: 12px; font-size: 14px; color: var(--muted); text-underline-offset: 3px; text-decoration-color: var(--faint); }
+.more-link:hover { color: var(--fg); }
 
 .faq { display: grid; gap: 10px; max-width: 760px; }
 .faq details { padding: 16px 20px; border-radius: 16px; }
@@ -129,6 +138,7 @@ pre {
 
 footer { padding-top: 96px; padding-bottom: 48px; color: var(--faint); font-size: 13.5px; }
 footer p { margin: 0 0 8px; max-width: 680px; }
+footer .langs { margin: 16px 0; }
 
 .star {
   position: fixed;
@@ -151,7 +161,7 @@ footer p { margin: 0 0 8px; max-width: 680px; }
 .star b[hidden] { display: none; }
 
 @media (max-width: 820px) {
-  .two, .grid { grid-template-columns: 1fr; }
+  .two, .grid, .grid.two-col { grid-template-columns: 1fr; }
   .hero { padding-top: 64px; }
   section { padding-top: 64px; }
   .nav nav { gap: 16px; }

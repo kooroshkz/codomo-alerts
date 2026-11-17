@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Codomo-Benachrichtigung für Linz: neue Zimmer sofort gemeldet</title>
+  <meta name="description" content="Kostenlose, quelloffene Benachrichtigungen für neue Codomo-Zimmer (früher Holland2Stay) in Linz. Eine Nachricht per Telegram, Discord, ntfy oder E-Mail, sobald ein passendes Zimmer online ist.">
+  <link rel="canonical" href="https://kooroshkz.github.io/codomo-alerts/de/">
+  <link rel="alternate" hreflang="en" href="https://kooroshkz.github.io/codomo-alerts/">
+  <link rel="alternate" hreflang="nl" href="https://kooroshkz.github.io/codomo-alerts/nl/">
+  <link rel="alternate" hreflang="es" href="https://kooroshkz.github.io/codomo-alerts/es/">
+  <link rel="alternate" hreflang="pt" href="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <link rel="alternate" hreflang="de" href="https://kooroshkz.github.io/codomo-alerts/de/">
+  <link rel="alternate" hreflang="x-default" href="https://kooroshkz.github.io/codomo-alerts/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Codomo alerts">
+  <meta property="og:title" content="Codomo-Benachrichtigung für Linz">
+  <meta property="og:description" content="Sofort wissen, wenn Codomo in Linz ein Zimmer anbietet, das zu deiner Suche passt.">
+  <meta property="og:url" content="https://kooroshkz.github.io/codomo-alerts/de/">
+  <meta property="og:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="de_AT">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="nl_NL">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="pt_PT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Codomo-Benachrichtigung für Linz">
+  <meta name="twitter:description" content="Sofort wissen, wenn Codomo in Linz ein Zimmer anbietet, das zu deiner Suche passt.">
+  <meta name="twitter:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Codomo alerts",
+    "alternateName": [
+      "codomo-alerts",
+      "Holland2Stay alerts",
+      "holland2stay-alerts"
+    ],
+    "description": "Kostenlose Benachrichtigungen für neue Codomo-Zimmer (früher Holland2Stay) in Linz und in allen Codomo-Ländern.",
+    "inLanguage": "de",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Linux, macOS, Windows, Docker",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "isAccessibleForFree": true,
+    "url": "https://kooroshkz.github.io/codomo-alerts/de/",
+    "image": "https://kooroshkz.github.io/codomo-alerts/assets/og.png",
+    "screenshot": "https://kooroshkz.github.io/codomo-alerts/assets/dashboard.png",
+    "codeRepository": "https://github.com/kooroshkz/codomo-alerts",
+    "downloadUrl": "https://github.com/kooroshkz/codomo-alerts",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Person",
+      "name": "kooroshkz",
+      "url": "https://github.com/kooroshkz"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "de",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Gibt es eine Codomo-App, die über neue Zimmer informiert?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo nutzt das Suchprofil in deinem Mieterportal für Wohnungen mit Interessenregistrierung. Für eine Nachricht zu jedem neuen Angebot, nach deinen Filtern und in der App, die du schon nutzt, gibt es dieses kostenlose, inoffizielle Tool."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Bucht es für mich?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nein. Es sagt dir Bescheid, buchen musst du selbst auf codomo.eu. Automatisches Buchen verstößt gegen deren Bedingungen. Lass einen Tab offen und bleib eingeloggt, dann bist du einen Klick entfernt."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Was ist mit Zimmern nur für Frauen oder nur für Männer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo kennzeichnet manche Zimmer in Linz und Granada so. Die Nachricht zeigt das an, und mit CODOMO_GENDER=female oder male werden die übersprungen, die nicht für dich sind."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Warum steht bei Zimmern in Linz keine Zahl der Schlafzimmer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo gibt keine an. Es sind Zimmer in einem Studentenheim, deshalb zählt der Filter bedrooms sie als Studios: studio schließt sie ein, 2+ nicht."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Was ist Codomo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo, früher Holland2Stay, vermietet Zimmer, Studios und Wohnungen in den Niederlanden, in Granada, in Carcavelos bei Lissabon und in Linz. Dieses Tool ist nicht von Codomo."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Brauche ich einen Server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nein. Jeder Computer, der eingeschaltet bleibt, reicht: ein Laptop am Strom, ein Raspberry Pi, ein NAS oder ein kleiner VPS."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "In welcher Sprache kommen die Nachrichten?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Auf Englisch, wie das Dashboard."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <a class="brand" href="../de/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg>
+      <span>codomo <b>alerts</b></span>
+    </a>
+    <nav>
+      <a href="#start">Loslegen</a>
+      <a href="../demo/">Demo</a>
+      <a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Kostenlos · Open Source · selbst gehostet · inoffiziell</p>
+      <h1>Sofort wissen, wenn Codomo in Linz ein Zimmer anbietet.</h1>
+      <p class="lead">Gute Zimmer sind in Minuten weg. Dieses Tool beobachtet die neuen Angebote auf codomo.eu (früher Holland2Stay) für dich und schickt dir eine Nachricht aufs Handy, sobald eines zu deiner Suche passt: deine Stadt, dein Budget, dein Einzugsdatum.</p>
+      <div class="cta">
+        <a class="button primary" href="#start">Loslegen</a>
+        <a class="button" href="../demo/">Demo ansehen</a>
+      </div>
+      <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="../de/" hreflang="de" lang="de" aria-current="page">Deutsch</a></p>
+    </section>
+
+    <figure class="shot glass">
+      <img src="../assets/dashboard.png" alt="Das Dashboard: passende Zimmer, Aktivität und wann neue Angebote erscheinen" width="1280" height="1770" loading="lazy">
+    </figure>
+
+    <section id="start">
+      <h2>In einer Minute startklar</h2>
+      <div class="two">
+        <div class="glass card">
+          <h3>Docker</h3>
+          <pre><code>docker run -d --name codomo-alerts --restart unless-stopped \
+  -e CODOMO_CITIES=&quot;Linz&quot; \
+  -e CODOMO_PRICE_MAX=800 \
+  -e CODOMO_NOTIFY=&quot;tgram://BOT_TOKEN/CHAT_ID&quot; \
+  -v codomo-data:/data -p 127.0.0.1:8080:8080 \
+  ghcr.io/kooroshkz/codomo-alerts</code></pre>
+          <p>Das Dashboard läuft auf <code>localhost:8080</code>. Funktioniert auch auf einem Raspberry Pi oder NAS.</p>
+        </div>
+        <div class="glass card">
+          <h3>Python</h3>
+          <pre><code>pipx install codomo-alerts
+codomo-alerts init
+codomo-alerts watch</code></pre>
+          <p><code>init</code> stellt ein paar Fragen und schickt eine Testnachricht.</p>
+        </div>
+      </div>
+      <p class="hint"><code>CODOMO_GENDER</code> ist optional: mit <code>female</code> oder <code>male</code> werden Zimmer übersprungen, die Codomo nur für das andere Geschlecht vergibt. Für ganz Österreich: <code>CODOMO_COUNTRIES=at</code>.</p>
+    </section>
+
+    <section id="where">
+      <h2>Alle Codomo-Städte</h2>
+      <p class="intro">Jedes Land, in dem Codomo vermietet, und neue, sobald Codomo sie eröffnet.</p>
+      <div class="grid two-col">
+        <div class="glass card"><h3>Österreich</h3><p>Linz (Codomo Linz). Studentenzimmer ab etwa 709 € im Monat, manche geteilt, manche nur für Frauen oder nur für Männer.</p></div>
+        <div class="glass card"><h3>Niederlande</h3><p>Eindhoven, Rotterdam, Amsterdam, Den Haag, Utrecht und 21 weitere Städte.</p><a class="more-link" href="../nl/" hreflang="nl" lang="nl">Nederlands</a></div>
+        <div class="glass card"><h3>Spanien</h3><p>Granada (Codomo Granada). Zimmer ab etwa 395 € im Monat.</p><a class="more-link" href="../es/" hreflang="es" lang="es">Español</a></div>
+        <div class="glass card"><h3>Portugal</h3><p>Carcavelos bei Lissabon (Codomo Lombos). Studentenzimmer ab etwa 869 € im Monat.</p><a class="more-link" href="../pt/" hreflang="pt" lang="pt-PT">Português</a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Nachrichten in der App, die du schon nutzt</h2>
+      <ul class="chips">
+        <li>Telegram</li><li>Discord</li><li>ntfy</li><li>Slack</li><li>Email</li><li>Signal</li>
+        <li>Matrix</li><li>Pushover</li><li>Gotify</li><li>Home Assistant</li><li>Webhooks</li>
+        <li class="more">und über 100 weitere über <a href="https://github.com/caronc/apprise/wiki">Apprise</a></li>
+      </ul>
+      <div class="glass message">
+        <small>Telegram, 09:42</small>
+        <strong>Peuerbachstraße 28 314A</strong>
+        <span>Linz · €709</span>
+        <span>Max 1 year · Furnished · Male only</span>
+        <span class="link">codomo.eu/homes/at/en/linz/linz/peuerbachstrasse-28-314a</span>
+      </div>
+      <p class="note">Die Nachrichten selbst sind auf Englisch.</p>
+    </section>
+
+    <section>
+      <h2>Was du bekommst</h2>
+      <div class="grid">
+        <div class="glass card"><h3>Deine Suche</h3><p>Länder, Städte, Schlafzimmer, Budget, Vertragsdauer, Möblierung, Einzugsdatum und Zimmer nur für Frauen oder nur für Männer.</p></div>
+        <div class="glass card"><h3>Nur Neues</h3><p>Neue Zimmer, wieder freie Zimmer, Shortlist-Wohnungen, die direkt buchbar werden, und Preissenkungen. Nie zweimal dasselbe.</p></div>
+        <div class="glass card"><h3>Interesse registrieren</h3><p>Wohnungen, bei denen Codomo jemanden aus einer Shortlist auswählt, mit der Zahl der bisherigen Anmeldungen.</p></div>
+        <div class="glass card"><h3>Neue Gebäude</h3><p>Eine Nachricht, wenn auf codomo.eu eine neue Gebäudeseite erscheint.</p></div>
+        <div class="glass card"><h3>Dashboard</h3><p>Was frei ist, was weg ist und wie schnell, und zu welchen Uhrzeiten meist Neues kommt.</p></div>
+        <div class="glass card"><h3>Rücksichtsvoll</h3><p>Alle paar Minuten eine Abfrage, öfter zu den Zeiten, in denen Angebote erscheinen. Es sagt, wer es ist, und bremst, wenn es darum gebeten wird.</p></div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Fragen</h2>
+      <div class="faq">
+        <details class="glass"><summary>Gibt es eine Codomo-App, die über neue Zimmer informiert?</summary><p>Codomo nutzt das Suchprofil in deinem Mieterportal für Wohnungen mit Interessenregistrierung. Für eine Nachricht zu jedem neuen Angebot, nach deinen Filtern und in der App, die du schon nutzt, gibt es dieses kostenlose, inoffizielle Tool.</p></details>
+        <details class="glass"><summary>Bucht es für mich?</summary><p>Nein. Es sagt dir Bescheid, buchen musst du selbst auf codomo.eu. Automatisches Buchen verstößt gegen deren Bedingungen. Lass einen Tab offen und bleib eingeloggt, dann bist du einen Klick entfernt.</p></details>
+        <details class="glass"><summary>Was ist mit Zimmern nur für Frauen oder nur für Männer?</summary><p>Codomo kennzeichnet manche Zimmer in Linz und Granada so. Die Nachricht zeigt das an, und mit <code>CODOMO_GENDER=female</code> oder <code>male</code> werden die übersprungen, die nicht für dich sind.</p></details>
+        <details class="glass"><summary>Warum steht bei Zimmern in Linz keine Zahl der Schlafzimmer?</summary><p>Codomo gibt keine an. Es sind Zimmer in einem Studentenheim, deshalb zählt der Filter <code>bedrooms</code> sie als Studios: <code>studio</code> schließt sie ein, <code>2+</code> nicht.</p></details>
+        <details class="glass"><summary>Was ist Codomo?</summary><p>Codomo, früher Holland2Stay, vermietet Zimmer, Studios und Wohnungen in den Niederlanden, in Granada, in Carcavelos bei Lissabon und in Linz. Dieses Tool ist nicht von Codomo.</p></details>
+        <details class="glass"><summary>Brauche ich einen Server?</summary><p>Nein. Jeder Computer, der eingeschaltet bleibt, reicht: ein Laptop am Strom, ein Raspberry Pi, ein NAS oder ein kleiner VPS.</p></details>
+        <details class="glass"><summary>In welcher Sprache kommen die Nachrichten?</summary><p>Auf Englisch, wie das Dashboard.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Inoffiziell und unabhängig. Nicht verbunden mit Codomo oder Holland2Stay B.V. und nicht von ihnen unterstützt. Die Namen beschreiben nur, womit es funktioniert. Nutzung auf eigenes Risiko, bitte halte dich an deren Bedingungen.</p>
+    <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="../de/" hreflang="de" lang="de" aria-current="page">Deutsch</a></p>
+    <p><a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a> · MIT license</p>
+  </footer>
+
+  <div class="star">
+    <a href="https://github.com/kooroshkz/codomo-alerts" target="_blank" rel="noopener"
+       aria-label="Star codomo-alerts on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.95 3.95 4.36.64-3.16 3.07.75 4.34L8 11.55 4.1 13.6l.75-4.34L1.69 6.19l4.36-.64z"/></svg>
+      <span>Star <span class="long">auf GitHub</span></span>
+      <b id="stars" hidden></b>
+    </a>
+  </div>
+  <script>
+    // Star count, once it's worth showing. Cached for an hour per visit.
+    (async () => {
+      const el = document.getElementById("stars");
+      const show = (n) => {
+        if (n < 10) return;
+        el.textContent = n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n);
+        el.hidden = false;
+      };
+      try {
+        const cached = JSON.parse(sessionStorage.getItem("codomo-alerts-stars") || "null");
+        if (cached && Date.now() - cached.t < 3600e3) return show(cached.n);
+      } catch (e) { /* no storage */ }
+      try {
+        const res = await fetch("https://api.github.com/repos/kooroshkz/codomo-alerts");
+        const n = (await res.json()).stargazers_count;
+        if (typeof n !== "number") return;
+        show(n);
+        try { sessionStorage.setItem("codomo-alerts-stars", JSON.stringify({ n, t: Date.now() })); } catch (e) { /* no storage */ }
+      } catch (e) { /* offline or rate limited: just the button */ }
+    })();
+  </script>
+</body>
+</html>

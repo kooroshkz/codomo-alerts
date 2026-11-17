@@ -4,40 +4,129 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <title>Codomo alerts: know the moment a new home is listed</title>
-  <meta name="description" content="Free, self-hosted alerts for new Codomo homes (formerly Holland2Stay). Pick your city, size and budget, get a message on Telegram, Discord, ntfy, email or 100+ other apps.">
+  <title>Codomo alerts for new listings (formerly Holland2Stay alerts)</title>
+  <meta name="description" content="Free alerts for new Codomo homes (formerly Holland2Stay) in the Netherlands, Granada, Lisbon and Linz. Your city, size and budget, sent to Telegram, Discord, ntfy or email.">
   <link rel="canonical" href="https://kooroshkz.github.io/codomo-alerts/">
+  <link rel="alternate" hreflang="en" href="https://kooroshkz.github.io/codomo-alerts/">
+  <link rel="alternate" hreflang="nl" href="https://kooroshkz.github.io/codomo-alerts/nl/">
+  <link rel="alternate" hreflang="es" href="https://kooroshkz.github.io/codomo-alerts/es/">
+  <link rel="alternate" hreflang="pt" href="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <link rel="alternate" hreflang="de" href="https://kooroshkz.github.io/codomo-alerts/de/">
+  <link rel="alternate" hreflang="x-default" href="https://kooroshkz.github.io/codomo-alerts/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Codomo alerts">
-  <meta property="og:description" content="Know the moment a Codomo (formerly Holland2Stay) home matching your search is listed.">
+  <meta property="og:site_name" content="Codomo alerts">
+  <meta property="og:title" content="Codomo alerts (formerly Holland2Stay alerts)">
+  <meta property="og:description" content="Know the moment a Codomo home matching your search is listed, in the Netherlands, Spain, Portugal and Austria.">
   <meta property="og:url" content="https://kooroshkz.github.io/codomo-alerts/">
   <meta property="og:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="nl_NL">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="pt_PT">
+  <meta property="og:locale:alternate" content="de_AT">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Codomo alerts (formerly Holland2Stay alerts)">
+  <meta name="twitter:description" content="Know the moment a Codomo home matching your search is listed, in the Netherlands, Spain, Portugal and Austria.">
+  <meta name="twitter:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="site.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "codomo-alerts",
-    "description": "Self-hosted alerts for new Codomo homes (formerly Holland2Stay).",
+    "name": "Codomo alerts",
+    "alternateName": [
+      "codomo-alerts",
+      "Holland2Stay alerts",
+      "holland2stay-alerts"
+    ],
+    "description": "Free, self-hosted alerts for new Codomo homes (formerly Holland2Stay) in the Netherlands, Spain, Portugal and Austria.",
+    "inLanguage": "en",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Linux, macOS, Windows, Docker",
-    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "isAccessibleForFree": true,
     "url": "https://kooroshkz.github.io/codomo-alerts/",
+    "image": "https://kooroshkz.github.io/codomo-alerts/assets/og.png",
+    "screenshot": "https://kooroshkz.github.io/codomo-alerts/assets/dashboard.png",
     "codeRepository": "https://github.com/kooroshkz/codomo-alerts",
-    "license": "https://opensource.org/licenses/MIT"
+    "downloadUrl": "https://github.com/kooroshkz/codomo-alerts",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Person",
+      "name": "kooroshkz",
+      "url": "https://github.com/kooroshkz"
+    }
   }
   </script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    "inLanguage": "en",
     "mainEntity": [
-      {"@type": "Question", "name": "Does it book homes for me?", "acceptedAnswer": {"@type": "Answer", "text": "No. It tells you, you book on codomo.eu yourself. Automated booking is against their terms."}},
-      {"@type": "Question", "name": "How fast are the alerts?", "acceptedAnswer": {"@type": "Answer", "text": "Usually within two minutes during weekday release hours, a few minutes the rest of the day."}},
-      {"@type": "Question", "name": "Do I need a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. Any computer that stays on works: a laptop, a Raspberry Pi, a NAS or a small VPS."}},
-      {"@type": "Question", "name": "What happened to Holland2Stay?", "acceptedAnswer": {"@type": "Answer", "text": "Holland2Stay became Codomo on 15 November 2026. This tool reads codomo.eu since version 0.2.0."}}
+      {
+        "@type": "Question",
+        "name": "Is there a Codomo app that tells me about new homes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo uses the home search in your tenant portal for register-interest homes. For a message about every new listing, filtered your way and sent to the app you already use, run this free, unofficial tool."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I get Holland2Stay notifications now?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Holland2Stay became Codomo on 16 November 2026 and holland2stay.com now redirects to codomo.eu. Tools that used the old Holland2Stay API stopped working. This tool was called holland2stay-alerts and reads codomo.eu since version 0.2.0, and your city names still work."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work in Granada, Lisbon and Linz?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Set CODOMO_CITIES to Granada, Lisbon (Carcavelos) or Linz. Some rooms there are shared, and some are female only or male only: set CODOMO_GENDER to skip the rooms that aren't open to you."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it book homes for me?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. It tells you, you book on codomo.eu yourself. Automated booking is against their terms. Keep a browser tab open and stay logged in so you're one click away."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How fast are the alerts?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Usually within two minutes during weekday release hours, a few minutes the rest of the day. Cheap homes in big cities can still go within a minute, so be ready to act."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What happened to the lottery?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo replaced it with \"Register interest\": you sign up for a home and Codomo picks someone from the shortlist, using your search profile. It is not first come, first served. You get a message when such a home matches your search, with how many people already showed interest."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need a server?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Any computer that stays on works: a laptop on power, a Raspberry Pi, a NAS or a small VPS."
+        }
+      }
     ]
   }
   </script>
@@ -46,7 +135,7 @@
   <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
 
   <header class="nav">
-    <a class="brand" href="./">
+    <a class="brand" href="">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg>
       <span>codomo <b>alerts</b></span>
     </a>
@@ -59,19 +148,18 @@
 
   <main>
     <section class="hero">
-      <p class="eyebrow">Free · open source · self-hosted</p>
+      <p class="eyebrow">Free · open source · self-hosted · unofficial</p>
       <h1>Know the moment a Codomo home is listed.</h1>
-      <p class="lead">Good homes go in minutes. This watches the listings on codomo.eu (formerly
-        Holland2Stay) for you and messages your phone when one matches your search: your cities,
-        your size, your budget.</p>
+      <p class="lead">Good homes go in minutes. This watches the new listings on codomo.eu (formerly Holland2Stay) for you, in the Netherlands, Spain, Portugal and Austria, and messages your phone when one matches your search: your cities, your size, your budget.</p>
       <div class="cta">
         <a class="button primary" href="#start">Get started</a>
         <a class="button" href="demo/">See the demo</a>
       </div>
+      <p class="langs"><a href="" hreflang="en" lang="en" aria-current="page">English</a> · <a href="nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="es/" hreflang="es" lang="es">Español</a> · <a href="pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="de/" hreflang="de" lang="de">Deutsch</a></p>
     </section>
 
     <figure class="shot glass">
-      <img src="assets/dashboard.png" alt="The dashboard: matching homes, activity, and when new homes show up" width="1280" height="1720" loading="lazy">
+      <img src="assets/dashboard.png" alt="The dashboard: matching homes, activity, and when new homes show up" width="1280" height="1770" loading="lazy">
     </figure>
 
     <section id="start">
@@ -80,9 +168,9 @@
         <div class="glass card">
           <h3>Docker</h3>
           <pre><code>docker run -d --name codomo-alerts --restart unless-stopped \
-  -e CODOMO_CITIES="Eindhoven, Rotterdam" \
+  -e CODOMO_CITIES=&quot;Eindhoven, Rotterdam&quot; \
   -e CODOMO_PRICE_MAX=1600 \
-  -e CODOMO_NOTIFY="tgram://BOT_TOKEN/CHAT_ID" \
+  -e CODOMO_NOTIFY=&quot;tgram://BOT_TOKEN/CHAT_ID&quot; \
   -v codomo-data:/data -p 127.0.0.1:8080:8080 \
   ghcr.io/kooroshkz/codomo-alerts</code></pre>
           <p>Dashboard on <code>localhost:8080</code>. Runs on a Raspberry Pi too.</p>
@@ -94,6 +182,18 @@ codomo-alerts init
 codomo-alerts watch</code></pre>
           <p><code>init</code> asks a few questions and sends a test message.</p>
         </div>
+      </div>
+      <p class="hint">Looking in Granada, Lisbon or Linz? Use <code>CODOMO_CITIES=Granada</code>, <code>Lisbon</code> or <code>Linz</code>. Add <code>CODOMO_GENDER=female</code> or <code>male</code> to skip rooms Codomo marks for the other gender only. Leave the cities empty for every country, or set <code>CODOMO_COUNTRIES=nl</code> for one.</p>
+    </section>
+
+    <section id="where">
+      <h2>Every Codomo city</h2>
+      <p class="intro">Every country Codomo rents in, and new ones as soon as Codomo opens them.</p>
+      <div class="grid two-col">
+        <div class="glass card"><h3>Netherlands</h3><p>Eindhoven, Rotterdam, Amsterdam, The Hague, Utrecht, Groningen, Maastricht and 19 more cities. Book directly or register interest.</p><a class="more-link" href="nl/" hreflang="nl" lang="nl">Nederlands</a></div>
+        <div class="glass card"><h3>Spain</h3><p>Granada (Codomo Granada). Rooms from about €395 a month, some shared, some female only or male only.</p><a class="more-link" href="es/" hreflang="es" lang="es">Español</a></div>
+        <div class="glass card"><h3>Portugal</h3><p>Carcavelos, near Lisbon (Codomo Lombos). Student rooms from about €869 a month.</p><a class="more-link" href="pt/" hreflang="pt" lang="pt-PT">Português</a></div>
+        <div class="glass card"><h3>Austria</h3><p>Linz (Codomo Linz). Student rooms from about €709 a month, some shared, some female only or male only.</p><a class="more-link" href="de/" hreflang="de" lang="de">Deutsch</a></div>
       </div>
     </section>
 
@@ -111,12 +211,13 @@ codomo-alerts watch</code></pre>
         <span>Indefinite · Semi-furnished</span>
         <span class="link">codomo.eu/homes/nl/en/zoetermeer/sea-tower/engelandlaan-300-c</span>
       </div>
+      <p class="note">Alerts are in English.</p>
     </section>
 
     <section>
       <h2>What you get</h2>
       <div class="grid">
-        <div class="glass card"><h3>Your search</h3><p>Cities, bedrooms, budget, contract length, furnishing, move-in date.</p></div>
+        <div class="glass card"><h3>Your search</h3><p>Countries, cities, bedrooms, budget, contract length, furnishing, move-in date, and female only or male only rooms.</p></div>
         <div class="glass card"><h3>Only what's new</h3><p>New homes, homes back on the market, shortlist homes that turn bookable, price drops. Never the same one twice.</p></div>
         <div class="glass card"><h3>Register interest</h3><p>Homes where Codomo picks from a shortlist, with how many people already signed up.</p></div>
         <div class="glass card"><h3>New buildings</h3><p>A message when a new building page shows up on codomo.eu.</p></div>
@@ -125,21 +226,23 @@ codomo-alerts watch</code></pre>
       </div>
     </section>
 
-    <section>
+    <section id="faq">
       <h2>Questions</h2>
       <div class="faq">
+        <details class="glass"><summary>Is there a Codomo app that tells me about new homes?</summary><p>Codomo uses the home search in your tenant portal for register-interest homes. For a message about every new listing, filtered your way and sent to the app you already use, run this free, unofficial tool.</p></details>
+        <details class="glass"><summary>How do I get Holland2Stay notifications now?</summary><p>Holland2Stay became Codomo on 16 November 2026 and holland2stay.com now redirects to codomo.eu. Tools that used the old Holland2Stay API stopped working. This tool was called holland2stay-alerts and reads codomo.eu since version 0.2.0, and your city names still work.</p></details>
+        <details class="glass"><summary>Does it work in Granada, Lisbon and Linz?</summary><p>Yes. Set <code>CODOMO_CITIES</code> to Granada, Lisbon (Carcavelos) or Linz. Some rooms there are shared, and some are female only or male only: set <code>CODOMO_GENDER</code> to skip the rooms that aren't open to you.</p></details>
         <details class="glass"><summary>Does it book homes for me?</summary><p>No. It tells you, you book on codomo.eu yourself. Automated booking is against their terms. Keep a browser tab open and stay logged in so you're one click away.</p></details>
         <details class="glass"><summary>How fast are the alerts?</summary><p>Usually within two minutes during weekday release hours, a few minutes the rest of the day. Cheap homes in big cities can still go within a minute, so be ready to act.</p></details>
-        <details class="glass"><summary>Do I need a server?</summary><p>No. Any computer that stays on works: a laptop on power, a Raspberry Pi, a NAS or a small VPS.</p></details>
         <details class="glass"><summary>What happened to the lottery?</summary><p>Codomo replaced it with "Register interest": you sign up for a home and Codomo picks someone from the shortlist, using your search profile. It is not first come, first served. You get a message when such a home matches your search, with how many people already showed interest.</p></details>
-        <details class="glass"><summary>What happened to Holland2Stay?</summary><p>Holland2Stay became Codomo on 15 November 2026 and holland2stay.com now redirects to codomo.eu. This tool was called holland2stay-alerts and reads codomo.eu since version 0.2.0.</p></details>
+        <details class="glass"><summary>Do I need a server?</summary><p>No. Any computer that stays on works: a laptop on power, a Raspberry Pi, a NAS or a small VPS.</p></details>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>Unofficial and independent. Not affiliated with, endorsed by or connected to Codomo or Holland2Stay B.V.
-      Names are only used to describe what this works with. Use it at your own risk and follow their terms.</p>
+    <p>Unofficial and independent. Not affiliated with, endorsed by or connected to Codomo or Holland2Stay B.V. Names are only used to describe what this works with. Use it at your own risk and follow their terms.</p>
+    <p class="langs"><a href="" hreflang="en" lang="en" aria-current="page">English</a> · <a href="nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="es/" hreflang="es" lang="es">Español</a> · <a href="pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="de/" hreflang="de" lang="de">Deutsch</a></p>
     <p><a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a> · MIT license</p>
   </footer>
 

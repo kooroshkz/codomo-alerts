@@ -22,17 +22,19 @@ def page(name: str) -> str:
     return gzip.decompress((DATA / name).read_bytes()).decode("utf-8")
 
 
-def home(n: int, name: str | None = None, *, city: str = "Eindhoven", bedrooms: int = 0, rent: float = 1100.0,
+def home(n: int, name: str | None = None, *, city: str = "Eindhoven", bedrooms: int | None = 0,
+         rent: float = 1100.0,
          extra: float = 100.0, direct: bool = True, furnishing: str = "Furnished", persons: str = "1",
          contract: str = "indefinite", available: str = "2026-12-01", interest: int | None = None,
-         country: str = "nl") -> Card:
+         country: str = "nl", tags: list[str] | None = None) -> Card:
     key = f"teststraat-{n}"
     slug = catalog.city_slug(catalog.city_label(city))
     card = Card(path=f"/homes/{country}/en/{slug}/test-tower/{key}", country=country, key=key, unit_id=f"uid-{n}",
                 name=name or f"Teststraat {n}", city=city, building="Test Tower", bedrooms=bedrooms,
                 bedrooms_label=catalog.bedrooms_label(bedrooms), area="40", persons=persons, finishing=furnishing,
                 floor="2", available_from=available, min_stay="12 months", rent=rent, extra=extra, direct=direct,
-                interest=interest, photos=[f"https://images.codomoliving.com/media/pictures/tst/{key}.jpg"])
+                interest=interest, tags=list(tags or []),
+                photos=[f"https://images.codomoliving.com/media/pictures/tst/{key}.jpg"])
     card.contract = contract       # what its own page says
     return card
 
@@ -85,7 +87,8 @@ class FakeCodomo:
         all_types = [h for h in rows if keep(h, "publish_mode")]
         booking = {None: len(all_types), "direct_booking": sum(h.direct for h in all_types)}
         booking["interest"] = booking[None] - booking["direct_booking"]
-        bedrooms = dict(Counter(h.bedrooms for h in rows if keep(h, "bedrooms")))
+        # like the site: homes without a bedroom count (Portugal, Austria) are not in these counts
+        bedrooms = dict(Counter(h.bedrooms for h in rows if keep(h, "bedrooms") and h.bedrooms is not None))
         n = int(params.get("page", 1))
         if n > max(1, ceil(len(shown) / 25)):
             n = 1

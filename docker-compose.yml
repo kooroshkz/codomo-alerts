@@ -8,6 +8,12 @@ services:
       CODOMO_BEDROOMS: "studio, 1"
       CODOMO_PRICE_MAX: "1600"
       CODOMO_NOTIFY: "tgram://BOT_TOKEN/CHAT_ID"
+      # every country Codomo lists when cities and countries are empty; or one of them:
+      # CODOMO_COUNTRIES: "nl"
+      # Granada, Lisbon or Linz instead:
+      # CODOMO_CITIES: "Granada"
+      # skip rooms Codomo marks for the other gender only:
+      # CODOMO_GENDER: "female"
       # CODOMO_DASHBOARD_PASSWORD: "pick-one"
     volumes:
       - codomo-data:/data

@@ -105,8 +105,9 @@ def cmd_health(cfg: Config, args) -> int:
 
 
 def cmd_list(cfg: Config, args) -> int:
-    if args.city:
-        cfg.search.cities = build({"search": {"cities": args.city}}, {}).search.cities
+    if args.city or args.country:
+        picked = build({"search": {"cities": args.city or [], "countries": args.country or []}}, {}).search
+        cfg.search.cities, cfg.search.countries = picked.cities, picked.countries
         cfg.search.exclude_cities = []
     client = Client(cfg.base_url)
     status = "interest" if args.interest else "available"
@@ -128,7 +129,8 @@ def cmd_list(cfg: Config, args) -> int:
     if args.json:
         print(json.dumps([{"name": x.name, "url": x.url, "price": x.price, "city": x.city_name,
                            "bedrooms": x.bedrooms_name, "contract": x.contract_name,
-                           "furnishing": x.furnishing_name, "status": x.status, "interest": x.interest}
+                           "furnishing": x.furnishing_name, "gender": x.gender_name, "status": x.status,
+                           "interest": x.interest}
                           for x in found], indent=2))
         return 0
     print(dim(cfg.search.summary()))
@@ -149,17 +151,23 @@ def cmd_list(cfg: Config, args) -> int:
 
 
 def cmd_cities(cfg: Config, args) -> int:
-    rows = [[name, catalog.MARKETS[market] if market != "nl" else ""] for name, market in sorted(catalog.CITIES.items())]
+    order = list(catalog.MARKETS)
+    rows = [[name, catalog.market_label(market)]
+            for name, market in sorted(catalog.CITIES.items(), key=lambda kv: (order.index(kv[1]), kv[0]))]
     print(table(rows))
     try:
         live = discover_cities(Client(cfg.base_url))
         unknown = [c for c in live if not any(catalog.same_city(c, k) for k in catalog.CITIES)]
+        countries = sorted({m for m in live.values() if m not in catalog.MARKETS})
     except CodomoError:
-        unknown = []
+        unknown, countries = [], []
     if unknown:
         print()
         print(warn("New cities on Codomo: " + ", ".join(unknown)))
         print(dim("Update codomo-alerts to use them in your search."))
+    if countries:
+        print(warn("New countries on Codomo: " + ", ".join(c.upper() for c in countries)))
+        print(dim("A search without cities or countries already reads them."))
     return 0
 
 
@@ -335,6 +343,7 @@ def parser() -> argparse.ArgumentParser:
     li = sub.add_parser("list", parents=[common], help="show what matches right now")
     li.add_argument("--interest", action="store_true", help="register-interest homes instead")
     li.add_argument("--city", action="append", help="only this city (repeat for more)")
+    li.add_argument("--country", action="append", help="only this country: nl, es, pt or at (repeat for more)")
     li.add_argument("--json", action="store_true", help="machine readable output")
     sub.add_parser("cities", parents=[common], help="city names you can use")
     sub.add_parser("test", parents=[common], help="send a test notification")

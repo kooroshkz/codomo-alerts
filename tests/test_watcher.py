@@ -256,3 +256,52 @@ def test_pause_survives_restart(setup, store, make_cfg):
     clock.advance(minutes=1)
     again.tick()
     assert site.requests == before
+
+
+def test_homes_abroad_are_watched_and_say_who_they_are_for(setup):
+    w, site, n, clock = setup([home(1)], search={"countries": "all"})
+    w.tick()
+    site.add(home(2, "Avenida del Conocimiento 50 habitación 150", city="Granada", country="es", bedrooms=1,
+                  rent=395, extra=0, furnishing="Fully furnished", tags=["Female only"]))
+    clock.advance(minutes=2)
+    w.tick()
+    title, body = n.sent[-1]
+    assert title == "Avenida del Conocimiento 50 habitación 150"
+    assert body.splitlines()[:2] == ["Granada · 1 bedroom · €395", "Indefinite · Fully furnished · Female only"]
+    assert w.store.listing("teststraat-2")["gender"] == "female"
+
+
+def test_a_country_codomo_opens_later_is_read(setup):
+    w, site, n, clock = setup([home(1), home(2, city="Berlin", country="de")], search={"countries": "all"})
+    site.city_list = [*site.city_list, site.city_list[0].__class__("berlin", "Berlin", "DE")]
+    w.tick()
+    assert "de" in [c[0] for c in site.calls] and w.store.listing("teststraat-2")["active"] == 1
+    site.add(home(3, city="Berlin", country="de"))
+    clock.advance(minutes=2)
+    w.tick()
+    assert n.sent[-1][0] == "Teststraat 3"
+
+
+def test_only_the_named_countries_are_read(setup):
+    w, site, n, clock = setup([home(1), home(2, city="Granada", country="es")], search={"countries": ["nl"]})
+    w.tick()
+    assert {c[0] for c in site.calls} == {"nl"} and w.store.listing("teststraat-2") is None
+
+
+def test_an_older_database_gets_the_new_column(tmp_path):
+    import sqlite3
+
+    from codomo_alerts.store import Store
+    path = tmp_path / "old.db"
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE listings (id TEXT PRIMARY KEY, name TEXT NOT NULL, url TEXT NOT NULL, price REAL, "
+               "status TEXT NOT NULL, city TEXT, bedrooms INTEGER, contract TEXT, furnishing TEXT, building TEXT, "
+               "persons INTEGER, available_from TEXT, interest INTEGER, active INTEGER NOT NULL DEFAULT 0, "
+               "misses INTEGER NOT NULL DEFAULT 0, first_seen TEXT NOT NULL, listed_at TEXT, last_seen TEXT, "
+               "gone_at TEXT)")
+    db.execute("INSERT INTO listings (id, name, url, status, first_seen) VALUES ('a', 'A', 'u', 'available', 'x')")
+    db.commit()
+    db.close()
+    store = Store(path)
+    assert store.listing("a")["gender"] is None
+    store.close()

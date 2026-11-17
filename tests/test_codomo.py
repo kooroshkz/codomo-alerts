@@ -102,7 +102,7 @@ class PageClient(FakeCodomo):
 
 def test_fetch_reads_a_real_page():
     client = PageClient(page("list_2_bedrooms.html.gz"))
-    got = fetch(client, Search(bedrooms=[2], price_max=2500), "available")
+    got = fetch(client, Search(countries=["nl"], bedrooms=[2], price_max=2500), "available")
     assert client.calls == [("nl", {"publish_mode": "direct_booking", "max_rent": "2500", "bedrooms": "2"})]
     assert "g-h-betzweg-215" in got and got["g-h-betzweg-215"].price == 2109
 
@@ -110,8 +110,9 @@ def test_fetch_reads_a_real_page():
 def test_the_wrong_booking_type_is_an_error():
     # the saved page has both kinds: a site that ignores the booking type must be noticed
     with pytest.raises(Changed):
-        fetch(PageClient(page("list_2_bedrooms.html.gz"), booking=False), Search(bedrooms=[2]), "available")
-    interest = fetch(PageClient(page("list_2_bedrooms.html.gz")), Search(bedrooms=[2]), "interest")
+        fetch(PageClient(page("list_2_bedrooms.html.gz"), booking=False), Search(countries=["nl"], bedrooms=[2]),
+              "available")
+    interest = fetch(PageClient(page("list_2_bedrooms.html.gz")), Search(countries=["nl"], bedrooms=[2]), "interest")
     assert len(interest) == 2 and all(x.status == "interest" and x.interest is not None for x in interest.values())
 
 
@@ -141,7 +142,7 @@ def test_paging_stops_when_a_page_past_the_end_shows_page_one_again():
 
 def test_one_request_per_bedroom_count_with_homes():
     client = FakeCodomo([home(1, bedrooms=2), home(2, bedrooms=3), home(3, bedrooms=0)])
-    got = fetch(client, Search(bedrooms=[2, 3, 4]), "available")
+    got = fetch(client, Search(countries=["nl"], bedrooms=[2, 3, 4]), "available")
     assert set(got) == {"teststraat-1", "teststraat-2"}
     assert [c[1]["bedrooms"] for c in client.calls] == ["2", "3"]      # 4 has no homes: not asked
 
@@ -167,7 +168,7 @@ def search(**kw):
     (home(2, bedrooms=2, city="Eindhoven"), False),                       # excluded
     (home(3, bedrooms=2, city="Rotterdam", furnishing="Unfurnished"), False),
     (home(4, bedrooms=2, city="Rotterdam", rent=2450, extra=100), False),  # total 2550
-    (home(5, bedrooms=2, city="Linz", country="at"), False),               # Netherlands only
+    (home(5, bedrooms=2, city="Linz", country="at"), True),                # every country by default
     (home(6, bedrooms=4, city="Rotterdam"), None),                         # the site should have filtered it
 ])
 def test_filters_on_our_side(card, result):
@@ -181,6 +182,42 @@ def test_city_aliases_persons_and_move_in():
     assert matches(search(cities=["Linz"], exclude_cities=[]), home(1, bedrooms=2, city="Linz", country="at"))
 
 
-def test_cities_abroad_are_read_only_when_named():
-    assert Search().markets() == ["nl"]
+def test_every_country_unless_countries_or_cities_are_named():
+    assert Search().markets() == ["nl", "es", "pt", "at"]
+    assert Search().markets(["de", "nl"]) == ["nl", "es", "pt", "at", "de"]     # a country Codomo opened later
+    assert Search(countries=["es", "pt"]).markets(["de"]) == ["es", "pt"]
     assert Search(cities=["Linz", "Rotterdam"]).markets() == ["at", "nl"]
+    assert not matches(search(countries=["nl"]), home(5, bedrooms=2, city="Linz", country="at"))
+
+
+def test_every_country_is_read():
+    client = FakeCodomo([home(1), home(2, city="Granada", country="es"), home(3, city="Linz", country="at")])
+    got = fetch(client, Search(), "available")
+    assert set(got) == {"teststraat-1", "teststraat-2", "teststraat-3"}
+    assert [c[0] for c in client.calls] == ["nl", "es", "pt", "at"]
+    client.calls.clear()
+    assert set(fetch(client, Search(countries=["es"]), "available")) == {"teststraat-2"}
+    assert [c[0] for c in client.calls] == ["es"]
+
+
+def test_rooms_without_a_bedroom_count_count_as_studios():
+    # Portugal and Austria list rooms without a bedroom count, and the site's bedroom filter skips them
+    rooms = [home(1, city="Carcavelos", country="pt", bedrooms=None), home(2, city="Linz", country="at", bedrooms=None)]
+    client = FakeCodomo([*rooms, home(3, bedrooms=0), home(4, bedrooms=2)])
+    assert set(fetch(client, Search(bedrooms=[0, 1]), "available")) == {"teststraat-1", "teststraat-2", "teststraat-3"}
+    assert set(fetch(client, Search(bedrooms=[2]), "available")) == {"teststraat-4"}
+    client.calls.clear()
+    fetch(client, Search(countries=["nl"], bedrooms=[0]), "available")
+    assert len(client.calls) == 1        # the Netherlands counts bedrooms: no extra request
+
+
+def test_rooms_for_the_other_gender_are_skipped():
+    women = home(1, city="Granada", country="es", tags=["Female only"])
+    men = home(2, city="Linz", country="at", tags=["Male only"])
+    anyone = home(3, city="Granada", country="es")
+    assert [matches(Search(gender="female"), h) for h in (women, men, anyone)] == [True, False, True]
+    assert [matches(Search(gender="male"), h) for h in (women, men, anyone)] == [False, True, True]
+    assert all(matches(Search(), h) for h in (women, men, anyone))
+    got = fetch(FakeCodomo([women, men, anyone]), Search(), "available")
+    assert got["teststraat-1"].gender == "female" and got["teststraat-1"].gender_name == "Female only"
+    assert got["teststraat-3"].gender is None

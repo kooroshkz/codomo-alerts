@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Alertas Codomo Granada: avisos de nuevas habitaciones</title>
+  <meta name="description" content="Alertas gratis y de código abierto para nuevas habitaciones de Codomo (antes Holland2Stay) en Granada. Un mensaje en Telegram, Discord, ntfy o correo cuando sale una que encaja con tu búsqueda.">
+  <link rel="canonical" href="https://kooroshkz.github.io/codomo-alerts/es/">
+  <link rel="alternate" hreflang="en" href="https://kooroshkz.github.io/codomo-alerts/">
+  <link rel="alternate" hreflang="nl" href="https://kooroshkz.github.io/codomo-alerts/nl/">
+  <link rel="alternate" hreflang="es" href="https://kooroshkz.github.io/codomo-alerts/es/">
+  <link rel="alternate" hreflang="pt" href="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <link rel="alternate" hreflang="de" href="https://kooroshkz.github.io/codomo-alerts/de/">
+  <link rel="alternate" hreflang="x-default" href="https://kooroshkz.github.io/codomo-alerts/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Codomo alerts">
+  <meta property="og:title" content="Alertas de Codomo Granada">
+  <meta property="og:description" content="Entérate en cuanto Codomo publique una habitación en Granada que encaje con tu búsqueda.">
+  <meta property="og:url" content="https://kooroshkz.github.io/codomo-alerts/es/">
+  <meta property="og:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="nl_NL">
+  <meta property="og:locale:alternate" content="pt_PT">
+  <meta property="og:locale:alternate" content="de_AT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Alertas de Codomo Granada">
+  <meta name="twitter:description" content="Entérate en cuanto Codomo publique una habitación en Granada que encaje con tu búsqueda.">
+  <meta name="twitter:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Codomo alerts",
+    "alternateName": [
+      "codomo-alerts",
+      "Holland2Stay alerts",
+      "holland2stay-alerts"
+    ],
+    "description": "Alertas gratuitas para nuevas habitaciones de Codomo (antes Holland2Stay) en Granada y en todos los países de Codomo.",
+    "inLanguage": "es",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Linux, macOS, Windows, Docker",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "isAccessibleForFree": true,
+    "url": "https://kooroshkz.github.io/codomo-alerts/es/",
+    "image": "https://kooroshkz.github.io/codomo-alerts/assets/og.png",
+    "screenshot": "https://kooroshkz.github.io/codomo-alerts/assets/dashboard.png",
+    "codeRepository": "https://github.com/kooroshkz/codomo-alerts",
+    "downloadUrl": "https://github.com/kooroshkz/codomo-alerts",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Person",
+      "name": "kooroshkz",
+      "url": "https://github.com/kooroshkz"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "es",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Hay una app de Codomo que avise de habitaciones nuevas?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo usa el perfil de búsqueda de tu portal de inquilino para las viviendas con registro de interés. Para recibir un mensaje por cada nueva publicación, filtrada a tu gusto y en la app que ya usas, está esta herramienta gratuita y no oficial."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Reserva por mí?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Te avisa y tú reservas en codomo.eu. Reservar con herramientas automáticas va contra sus condiciones. Deja una pestaña abierta con la sesión iniciada y estarás a un clic."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Y las habitaciones solo para mujeres o solo para hombres?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo marca así algunas habitaciones de Granada y Linz. El aviso lo indica, y con CODOMO_GENDER=female o male se saltan las que no son para ti."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es Codomo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Codomo, antes Holland2Stay, alquila habitaciones, estudios y pisos en los Países Bajos, Granada, Carcavelos (Lisboa) y Linz. Esta herramienta no es de Codomo."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Necesito un servidor?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Sirve cualquier ordenador que se quede encendido: un portátil enchufado, una Raspberry Pi, un NAS o un VPS pequeño."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿En qué idioma llegan los avisos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "En inglés, igual que el panel."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <a class="brand" href="../es/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg>
+      <span>codomo <b>alerts</b></span>
+    </a>
+    <nav>
+      <a href="#start">Empezar</a>
+      <a href="../demo/">Demo</a>
+      <a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Gratis · código abierto · en tu propio equipo · no oficial</p>
+      <h1>Entérate en cuanto Codomo publique una habitación en Granada.</h1>
+      <p class="lead">Las buenas habitaciones vuelan en minutos. Esta herramienta vigila las nuevas publicaciones de codomo.eu (antes Holland2Stay) por ti y te avisa en el móvil cuando sale una que encaja con tu búsqueda: tu ciudad, tu presupuesto, tus fechas.</p>
+      <div class="cta">
+        <a class="button primary" href="#start">Empezar</a>
+        <a class="button" href="../demo/">Ver la demo</a>
+      </div>
+      <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es" aria-current="page">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="../de/" hreflang="de" lang="de">Deutsch</a></p>
+    </section>
+
+    <figure class="shot glass">
+      <img src="../assets/dashboard.png" alt="El panel: habitaciones que encajan, actividad y a qué horas salen las nuevas" width="1280" height="1770" loading="lazy">
+    </figure>
+
+    <section id="start">
+      <h2>Listo en un minuto</h2>
+      <div class="two">
+        <div class="glass card">
+          <h3>Docker</h3>
+          <pre><code>docker run -d --name codomo-alerts --restart unless-stopped \
+  -e CODOMO_CITIES=&quot;Granada&quot; \
+  -e CODOMO_PRICE_MAX=450 \
+  -e CODOMO_GENDER=female \
+  -e CODOMO_NOTIFY=&quot;tgram://BOT_TOKEN/CHAT_ID&quot; \
+  -v codomo-data:/data -p 127.0.0.1:8080:8080 \
+  ghcr.io/kooroshkz/codomo-alerts</code></pre>
+          <p>El panel está en <code>localhost:8080</code>. Funciona también en una Raspberry Pi o un NAS.</p>
+        </div>
+        <div class="glass card">
+          <h3>Python</h3>
+          <pre><code>pipx install codomo-alerts
+codomo-alerts init
+codomo-alerts watch</code></pre>
+          <p><code>init</code> hace unas preguntas y envía un mensaje de prueba.</p>
+        </div>
+      </div>
+      <p class="hint"><code>CODOMO_GENDER</code> es opcional: con <code>female</code> o <code>male</code> se saltan las habitaciones que Codomo marca solo para el otro género. Para toda España usa <code>CODOMO_COUNTRIES=es</code>.</p>
+    </section>
+
+    <section id="where">
+      <h2>Todas las ciudades de Codomo</h2>
+      <p class="intro">Todos los países donde alquila Codomo, y los nuevos en cuanto abran.</p>
+      <div class="grid two-col">
+        <div class="glass card"><h3>España</h3><p>Granada (Codomo Granada). Habitaciones desde unos 395 € al mes; algunas compartidas, algunas solo para mujeres o solo para hombres.</p></div>
+        <div class="glass card"><h3>Países Bajos</h3><p>Eindhoven, Róterdam, Ámsterdam, La Haya, Utrecht y 21 ciudades más.</p><a class="more-link" href="../nl/" hreflang="nl" lang="nl">Nederlands</a></div>
+        <div class="glass card"><h3>Portugal</h3><p>Carcavelos, cerca de Lisboa (Codomo Lombos). Habitaciones para estudiantes desde unos 869 € al mes.</p><a class="more-link" href="../pt/" hreflang="pt" lang="pt-PT">Português</a></div>
+        <div class="glass card"><h3>Austria</h3><p>Linz (Codomo Linz). Habitaciones para estudiantes desde unos 709 € al mes.</p><a class="more-link" href="../de/" hreflang="de" lang="de">Deutsch</a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Avisos en la app que ya usas</h2>
+      <ul class="chips">
+        <li>Telegram</li><li>Discord</li><li>ntfy</li><li>Slack</li><li>Email</li><li>Signal</li>
+        <li>Matrix</li><li>Pushover</li><li>Gotify</li><li>Home Assistant</li><li>Webhooks</li>
+        <li class="more">y más de 100 a través de <a href="https://github.com/caronc/apprise/wiki">Apprise</a></li>
+      </ul>
+      <div class="glass message">
+        <small>Telegram, 09:42</small>
+        <strong>Avenida del Conocimiento 50 habitación 150</strong>
+        <span>Granada · 1 bedroom · €395</span>
+        <span>Indefinite · Fully furnished · Female only</span>
+        <span class="link">codomo.eu/homes/es/en/granada/granada/av-del-conocimiento-50-150-1</span>
+      </div>
+      <p class="note">Los avisos llegan en inglés.</p>
+    </section>
+
+    <section>
+      <h2>Qué recibes</h2>
+      <div class="grid">
+        <div class="glass card"><h3>Tu búsqueda</h3><p>Países, ciudades, dormitorios, presupuesto, duración del contrato, amueblado, fecha de entrada y habitaciones solo para mujeres o solo para hombres.</p></div>
+        <div class="glass card"><h3>Solo lo nuevo</h3><p>Habitaciones nuevas, las que vuelven a quedar libres, las de lista corta que pasan a reserva directa y bajadas de precio. Nunca la misma dos veces.</p></div>
+        <div class="glass card"><h3>Registrar interés</h3><p>Viviendas en las que Codomo elige a alguien de una lista corta, con cuántas personas se han apuntado ya.</p></div>
+        <div class="glass card"><h3>Edificios nuevos</h3><p>Un mensaje cuando aparece la página de un edificio nuevo en codomo.eu.</p></div>
+        <div class="glass card"><h3>Panel</h3><p>Qué hay libre, qué se ha ido y en cuánto tiempo, y a qué horas suelen salir.</p></div>
+        <div class="glass card"><h3>Respetuoso</h3><p>Una comprobación cada pocos minutos, más a menudo en las horas en que se publica. Dice quién es y frena cuando se lo piden.</p></div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Preguntas</h2>
+      <div class="faq">
+        <details class="glass"><summary>¿Hay una app de Codomo que avise de habitaciones nuevas?</summary><p>Codomo usa el perfil de búsqueda de tu portal de inquilino para las viviendas con registro de interés. Para recibir un mensaje por cada nueva publicación, filtrada a tu gusto y en la app que ya usas, está esta herramienta gratuita y no oficial.</p></details>
+        <details class="glass"><summary>¿Reserva por mí?</summary><p>No. Te avisa y tú reservas en codomo.eu. Reservar con herramientas automáticas va contra sus condiciones. Deja una pestaña abierta con la sesión iniciada y estarás a un clic.</p></details>
+        <details class="glass"><summary>¿Y las habitaciones solo para mujeres o solo para hombres?</summary><p>Codomo marca así algunas habitaciones de Granada y Linz. El aviso lo indica, y con <code>CODOMO_GENDER=female</code> o <code>male</code> se saltan las que no son para ti.</p></details>
+        <details class="glass"><summary>¿Qué es Codomo?</summary><p>Codomo, antes Holland2Stay, alquila habitaciones, estudios y pisos en los Países Bajos, Granada, Carcavelos (Lisboa) y Linz. Esta herramienta no es de Codomo.</p></details>
+        <details class="glass"><summary>¿Necesito un servidor?</summary><p>No. Sirve cualquier ordenador que se quede encendido: un portátil enchufado, una Raspberry Pi, un NAS o un VPS pequeño.</p></details>
+        <details class="glass"><summary>¿En qué idioma llegan los avisos?</summary><p>En inglés, igual que el panel.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>No oficial e independiente. Sin relación con Codomo ni con Holland2Stay B.V., que no lo respaldan. Los nombres solo se usan para describir con qué funciona. Úsalo bajo tu responsabilidad y respeta sus condiciones.</p>
+    <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es" aria-current="page">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT">Português</a> · <a href="../de/" hreflang="de" lang="de">Deutsch</a></p>
+    <p><a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a> · MIT license</p>
+  </footer>
+
+  <div class="star">
+    <a href="https://github.com/kooroshkz/codomo-alerts" target="_blank" rel="noopener"
+       aria-label="Star codomo-alerts on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.95 3.95 4.36.64-3.16 3.07.75 4.34L8 11.55 4.1 13.6l.75-4.34L1.69 6.19l4.36-.64z"/></svg>
+      <span>Star <span class="long">en GitHub</span></span>
+      <b id="stars" hidden></b>
+    </a>
+  </div>
+  <script>
+    // Star count, once it's worth showing. Cached for an hour per visit.
+    (async () => {
+      const el = document.getElementById("stars");
+      const show = (n) => {
+        if (n < 10) return;
+        el.textContent = n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n);
+        el.hidden = false;
+      };
+      try {
+        const cached = JSON.parse(sessionStorage.getItem("codomo-alerts-stars") || "null");
+        if (cached && Date.now() - cached.t < 3600e3) return show(cached.n);
+      } catch (e) { /* no storage */ }
+      try {
+        const res = await fetch("https://api.github.com/repos/kooroshkz/codomo-alerts");
+        const n = (await res.json()).stargazers_count;
+        if (typeof n !== "number") return;
+        show(n);
+        try { sessionStorage.setItem("codomo-alerts-stars", JSON.stringify({ n, t: Date.now() })); } catch (e) { /* no storage */ }
+      } catch (e) { /* offline or rate limited: just the button */ }
+    })();
+  </script>
+</body>
+</html>

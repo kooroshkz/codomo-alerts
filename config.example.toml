@@ -3,7 +3,8 @@
 # a CODOMO_* environment variable, which wins over this file.
 
 [search]
-cities = ["Eindhoven", "Rotterdam"]   # empty = all of the Netherlands. `codomo-alerts cities` lists names
+# countries = ["nl"]                  # nl, es, pt, at or names like "Spain". Empty = every country Codomo lists
+cities = ["Eindhoven", "Rotterdam"]   # empty = every city. `codomo-alerts cities` lists names
 # exclude_cities = ["Maastricht"]
 bedrooms = ["studio", "1"]            # studio, 1, 2, 3, 4, or ranges like "2+" and "1-3"
 # price_min = 600
@@ -12,6 +13,7 @@ contract = ["long"]                   # long, short, or a maximum: indefinite, 2
 # persons = 2                         # the home must fit this many people
 # furnishing = ["furnished"]          # fully-furnished, furnished, semi-furnished, unfurnished
 # move_in_before = "2027-02-01"
+# gender = "female"                   # female or male: skip rooms Codomo keeps for the other gender only
 interest = true                       # also tell me about register-interest homes (Codomo picks from a shortlist)
 
 [notify]

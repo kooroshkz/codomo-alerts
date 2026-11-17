@@ -21,6 +21,11 @@ def test_single_alert_is_short():
                     "https://codomo.eu/homes/nl/en/eindhoven/kastanjelaan/k")
 
 
+def test_rooms_for_one_gender_say_so():
+    _, body = messages.alert("new", home(city="Granada", bedrooms=1, gender="female"))
+    assert body.splitlines()[1] == "Indefinite · Furnished · Female only"
+
+
 def test_missing_details_leave_no_gaps():
     title, body = messages.alert("back", home(city=None, bedrooms=None, contract=None, furnishing=None))
     assert title == "Back: Kastanjelaan 1-135"

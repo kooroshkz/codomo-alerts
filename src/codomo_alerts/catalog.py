@@ -7,7 +7,13 @@ import re
 # our status name -> the site's publish_mode
 STATUS = {"available": "direct_booking", "interest": "interest"}
 
-MARKETS = {"nl": "Netherlands", "at": "Austria", "es": "Spain", "pt": "Portugal"}
+# countries with homes on codomo.eu on 2026-11-17; a new one is read when the site lists it
+MARKETS = {"nl": "Netherlands", "es": "Spain", "pt": "Portugal", "at": "Austria"}
+MARKET_ALIASES = {
+    "holland": "nl", "the netherlands": "nl", "nederland": "nl", "niederlande": "nl", "paises bajos": "nl",
+    "spain": "es", "espana": "es", "españa": "es", "spanje": "es", "spanien": "es", "espanha": "es",
+    "austria": "at", "osterreich": "at", "österreich": "at", "oostenrijk": "at", "áustria": "at",
+}
 
 # Cities on codomo.eu on 2026-11-15, with their market. `codomo-alerts cities` shows new ones.
 CITIES: dict[str, str] = {
@@ -57,6 +63,9 @@ FURNISHING_ALIASES = {
     "gestoffeerd": "semi-furnished", "ongemeubileerd": "unfurnished", "kaal": "unfurnished",
 }
 
+GENDERS = {"female": "Female only", "male": "Male only"}
+GENDER_ALIASES = {"f": "female", "woman": "female", "women": "female", "m": "male", "man": "male", "men": "male"}
+
 PERSONS = {"one": 1, "single": 1, "couple": 2, "two": 2, "three": 3, "four": 4, "family": 3}
 
 
@@ -92,8 +101,44 @@ def city_slug(name: str) -> str:
     return SLUGS.get(name, norm(name).replace(" ", "-"))
 
 
-def market_of(name: str) -> str:
-    return CITIES.get(city_label(name), "nl")
+def market_of(name: str) -> str | None:
+    return CITIES.get(city_label(name))
+
+
+def market(value: str) -> list[str]:
+    """'Spain', 'españa' and 'es' -> ['es']. 'all' -> [] (every country)."""
+    key = norm(value)
+    if key in ("all", "*", "any", "every", "everywhere"):
+        return []
+    if key in MARKETS:
+        return [key]
+    if key in MARKET_ALIASES:
+        return [MARKET_ALIASES[key]]
+    for code, name in MARKETS.items():
+        if norm(name) == key:
+            return [code]
+    raise KeyError(value)
+
+
+def market_label(code: str) -> str:
+    return MARKETS.get(code, code.upper())
+
+
+def gender(value: str) -> str:
+    key = norm(value)
+    key = GENDER_ALIASES.get(key, key)
+    if key not in GENDERS:
+        raise KeyError(value)
+    return key
+
+
+def gender_of(tags: list[str]) -> str | None:
+    """The gender a home is for when Codomo marks it 'Female only' or 'Male only'."""
+    for tag in tags:
+        for key, label in GENDERS.items():
+            if norm(tag) == norm(label):
+                return key
+    return None
 
 
 def bedrooms(value: str) -> list[int]:

@@ -14,7 +14,7 @@ def test_defaults_watch_everything():
     assert cfg.dashboard.port == 8080
     assert cfg.base_url == "https://codomo.eu"
     assert cfg.data_dir.name == "codomo-alerts"
-    assert cfg.search.summary() == "All cities in the Netherlands"
+    assert cfg.search.countries == [] and cfg.search.summary() == "Every Codomo city"
 
 
 def test_names_slugs_and_aliases():
@@ -38,6 +38,24 @@ def test_contract_words():
     assert catalog.contract_ok("6m", ["short"]) and catalog.contract_ok("3m", ["short"])
     assert not catalog.contract_ok("indefinite", ["short"]) and not catalog.contract_ok(None, ["long"])
     assert catalog.contract_ok(None, [])
+
+
+def test_countries_by_code_or_name():
+    s = build({"search": {"countries": ["Spain", "Österreich", "pt", "holland", "es"]}}, {}).search
+    assert s.countries == ["es", "at", "pt", "nl"]
+    assert build({"search": {"countries": "all"}}, {}).search.countries == []
+    assert build({}, {"CODOMO_COUNTRIES": "españa, Portugal"}).search.countries == ["es", "pt"]
+    assert build({"search": {"countries": ["nl"]}}, {}).search.summary() == "All cities in the Netherlands"
+    assert build({"search": {"countries": "es, at"}}, {}).search.summary() == "All cities in Spain, Austria"
+    assert build({"search": {"cities": ["Lisboa"], "countries": ["pt"]}}, {}).search.cities == ["Carcavelos"]
+
+
+def test_gender():
+    assert build({"search": {"gender": "Female"}}, {}).search.gender == "female"
+    assert build({}, {"CODOMO_GENDER": "men"}).search.gender == "male"
+    assert build({"search": {"gender": ""}}, {}).search.gender is None
+    s = build({"search": {"cities": "Granada", "gender": "female"}}, {}).search
+    assert s.summary() == "Granada · open to women"
 
 
 def test_furnishing_and_persons():
@@ -77,6 +95,9 @@ def test_notify_file(tmp_path):
     ({"search": {"persons": "many"}}, "persons"),
     ({"search": {"price_min": 2000, "price_max": 1000}}, "higher than"),
     ({"search": {"cities": ["Utrecht"], "exclude_cities": ["Utrecht"]}}, "both"),
+    ({"search": {"countries": ["Germany"]}}, "countries: unknown value 'Germany'"),
+    ({"search": {"cities": ["Granada"], "countries": ["nl"]}}, "Granada is in Spain, which is not in countries"),
+    ({"search": {"gender": "any"}}, "female or male"),
     ({"search": {"move_in_before": "next week"}}, "YYYY-MM-DD"),
     ({"schedule": {"preset": "turbo"}}, "preset"),
     ({"general": {"base_url": "http://example.com"}}, "https"),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 
@@ -32,6 +33,7 @@ class Listing:
     persons: int | None = None
     available_from: str | None = None
     interest: int | None = None  # people who registered interest so far
+    gender: str | None = None    # female or male when Codomo keeps the home for one gender
 
     @property
     def city_name(self) -> str:
@@ -49,6 +51,10 @@ class Listing:
     def furnishing_name(self) -> str:
         return catalog.FURNISHING.get(self.furnishing or "", "")
 
+    @property
+    def gender_name(self) -> str:
+        return catalog.GENDERS.get(self.gender or "", "")
+
 
 def to_listing(card: Card, base_url: str) -> Listing:
     return Listing(
@@ -56,17 +62,23 @@ def to_listing(card: Card, base_url: str) -> Listing:
         status="available" if card.direct else "interest", city=catalog.city_label(card.city) or None,
         bedrooms=card.bedrooms, furnishing=catalog.furnishing_of(card.finishing),
         building=card.building or None, persons=int(card.persons) if card.persons.isdigit() else None,
-        available_from=card.available_from or None, interest=card.interest)
+        available_from=card.available_from or None, interest=card.interest, gender=catalog.gender_of(card.tags))
 
 
-def matches(search: Search, card: Card) -> bool | None:
+def matches(search: Search, card: Card, markets: list[str] | None = None) -> bool | None:
     """Every filter, checked on our side. None: the home fails a filter the site should have
-    applied (bedrooms), so the answer looks wrong."""
+    applied (bedrooms), so the answer looks wrong. A home without a bedroom count (rooms in
+    Portugal and Austria) counts as a studio."""
     if search.bedrooms and card.bedrooms is not None and card.bedrooms not in search.bedrooms:
         return None
+    if search.bedrooms and card.bedrooms is None and 0 not in search.bedrooms:
+        return False
     if search.cities and not any(catalog.same_city(card.city, c) for c in search.cities):
         return False
-    if not search.cities and card.country != "nl":
+    if card.country not in (markets or search.markets()):
+        return False
+    other = catalog.gender_of(card.tags)
+    if search.gender and other and other != search.gender:
         return False
     if any(catalog.same_city(card.city, c) for c in search.exclude_cities):
         return False
@@ -129,7 +141,9 @@ def _all(client: Client, country: str, params: dict[str, str]) -> tuple[list[Car
 
 
 def cards(client: Client, country: str, params: dict[str, str], bedrooms: list[int]) -> list[Card]:
-    """One request per bedroom count that has homes (the site filters one count at a time)."""
+    """One request per bedroom count that has homes (the site filters one count at a time).
+    Where the site counts no bedrooms at all (Portugal and Austria list rooms without a count),
+    a studio search reads the homes without a count too."""
     if not bedrooms:
         return _all(client, country, params)[0]
 
@@ -144,11 +158,14 @@ def cards(client: Client, country: str, params: dict[str, str], bedrooms: list[i
     for n, count in sorted(counts.bedrooms.items()):
         if n in bedrooms[1:] and count > 0:
             homes += one(n)[0]
+    if 0 in bedrooms and not any(counts.bedrooms.values()):
+        homes += [c for c in _all(client, country, params)[0] if c.bedrooms is None]
     return homes
 
 
-def fetch(client: Client, search: Search, status: str) -> dict[str, Listing]:
-    """Every home that matches the search right now, by its key."""
+def fetch(client: Client, search: Search, status: str, seen: Iterable[str] = ()) -> dict[str, Listing]:
+    """Every home that matches the search right now, by its key. `seen`: country codes found
+    on the site lately, read too when the search covers every country."""
     params = {"publish_mode": catalog.STATUS[status]}
     if search.price_max:
         # the site filters on the rent without service costs, so this keeps every home whose
@@ -158,9 +175,10 @@ def fetch(client: Client, search: Search, status: str) -> dict[str, Listing]:
         params["city"] = catalog.city_slug(search.cities[0])
     out: dict[str, Listing] = {}
     odd = 0
-    for country in search.markets():
+    markets = search.markets(seen)
+    for country in markets:
         for card in cards(client, country, params, search.bedrooms):
-            ok = matches(search, card)
+            ok = matches(search, card, markets)
             if ok is None:
                 odd += 1
             elif ok:

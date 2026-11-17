@@ -33,6 +33,17 @@ decodes it into home cards, and every answer is checked against the page's own n
 a page the code misreads becomes an error instead of "these homes are gone". When the layout
 changes, save a fresh page, add it to `tests/data`, and fix the decoder until the tests pass.
 
+Codomo runs the same site in every country (`/homes/nl/en`, `/homes/es/en`, `/homes/pt/en`,
+`/homes/at/en`), but the homes differ: rooms in Spain and Austria can be female only or male
+only, and homes in Portugal and Austria have no bedroom count. Check a change against more
+than one country.
+
+## The website
+
+`docs/` is the GitHub Pages site, in English with Dutch, Spanish, Portuguese and German pages
+in `docs/nl`, `docs/es`, `docs/pt` and `docs/de`. When you change one page, change the others
+too, and keep `docs/sitemap.xml` and the `hreflang` links in sync.
+
 ## When the site changes
 
 Most breakage looks like `doctor` failing or "Alerts may be broken". Please open an issue

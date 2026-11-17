@@ -27,20 +27,22 @@ def run(cfg: Config) -> None:
     cache: dict[tuple, tuple[float, str]] = {}
 
     @server.tool()
-    def search_homes(city: str = "", bedrooms: str = "", max_price: int = 0, interest: bool = False) -> str:
+    def search_homes(city: str = "", country: str = "", bedrooms: str = "", max_price: int = 0,
+                     interest: bool = False) -> str:
         """Codomo homes you can book directly right now (or register interest for, with interest=true:
         Codomo then picks someone from the shortlist).
 
-        city: a city name like "Eindhoven" or "The Hague", empty for all of the Netherlands.
+        city: a city name like "Eindhoven", "The Hague", "Granada", "Lisbon" or "Linz", empty for every city.
+        country: Netherlands, Spain, Portugal or Austria, empty for every country.
         bedrooms: studio, 1, 2, 3, 4 or "2+", empty for any.
         max_price: monthly price in euro with service costs, 0 for no limit.
         """
-        key = (city.strip().lower(), bedrooms.strip().lower(), max_price, interest)
+        key = (city.strip().lower(), country.strip().lower(), bedrooms.strip().lower(), max_price, interest)
         hit = cache.get(key)
         if hit and time.monotonic() - hit[0] < CACHE_SECONDS:
             return hit[1]
         try:
-            search = build({"search": {"cities": city or [], "bedrooms": bedrooms or [],
+            search = build({"search": {"cities": city or [], "countries": country or [], "bedrooms": bedrooms or [],
                                        "price_max": max_price or None}}, {}).search
         except ConfigError as e:
             return str(e)
@@ -64,8 +66,9 @@ def run(cfg: Config) -> None:
 
     @server.tool()
     def list_cities() -> str:
-        """Cities where Codomo has homes."""
-        return ", ".join(catalog.CITIES)
+        """Cities where Codomo has homes, by country."""
+        return "\n".join(f"{name}: " + ", ".join(c for c, m in catalog.CITIES.items() if m == code)
+                         for code, name in catalog.MARKETS.items())
 
     @server.tool()
     def recent_activity(limit: int = 15) -> str:

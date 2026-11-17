@@ -1,5 +1,12 @@
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.title="codomo-alerts" \
+      org.opencontainers.image.description="Self-hosted alerts for new Codomo homes (formerly Holland2Stay) in the Netherlands, Spain, Portugal and Austria" \
+      org.opencontainers.image.source="https://github.com/kooroshkz/codomo-alerts" \
+      org.opencontainers.image.url="https://kooroshkz.github.io/codomo-alerts/" \
+      org.opencontainers.image.documentation="https://github.com/kooroshkz/codomo-alerts#readme" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \

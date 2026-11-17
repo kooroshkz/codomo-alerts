@@ -47,6 +47,15 @@ def _ask_list(question: str, key: str, default: str = "") -> list[str]:
         print(bad(error))
 
 
+def _ask_one(question: str, key: str) -> str:
+    while True:
+        answer = ask(question).strip().lower()
+        error = _valid("search", key, answer)
+        if not error:
+            return answer
+        print(bad(error))
+
+
 def _ask_price() -> int | None:
     while True:
         answer = ask("Max price per month in euro, service costs included (empty for no limit):")
@@ -98,8 +107,18 @@ def run(path: str | None = None) -> int:
         print("Nothing changed.")
         return 1
 
-    print(dim("Cities: " + ", ".join(catalog.CITIES)))
-    cities = _ask_list("Which cities? (comma separated, empty for all of the Netherlands):", "cities")
+    for code, country in catalog.MARKETS.items():
+        print(dim(f"{country}: " + ", ".join(c for c, m in catalog.CITIES.items() if m == code)))
+    cities = _ask_list("Which cities? (comma separated, empty for every city):", "cities")
+    countries: list[str] = []
+    if not cities:
+        countries = _ask_list(f"Which countries? {', '.join(catalog.MARKETS.values())} (empty for all):",
+                              "countries")
+    markets = build({"search": {"cities": cities, "countries": countries}}, {}).search.markets()
+    gender = ""
+    if any(m != "nl" for m in markets):
+        print(dim("Some rooms in Spain and Austria are for women only or for men only."))
+        gender = _ask_one("Only show rooms open to: female, male (empty for all):", "gender")
     bedrooms = _ask_list("Bedrooms? studio, 1, 2, 3, 4 or 2+ (empty for any):", "bedrooms")
     price_max = _ask_price()
     contract = ask("Contract? long, short or any:", "any").strip().lower()
@@ -108,8 +127,8 @@ def run(path: str | None = None) -> int:
     interest = yes("Also tell you about register-interest homes (Codomo picks from a shortlist)?", default=True)
     urls = _ask_urls()
 
-    search = {"cities": cities, "bedrooms": bedrooms, "price_max": price_max,
-              "contract": [] if contract == "any" else [contract], "interest": interest}
+    search = {"countries": countries, "cities": cities, "bedrooms": bedrooms, "price_max": price_max,
+              "contract": [] if contract == "any" else [contract], "gender": gender, "interest": interest}
     target.parent.mkdir(parents=True, exist_ok=True)
     # notification links are secrets: private from the first byte
     fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)

@@ -63,14 +63,26 @@ def run(client: Client | None = None) -> list[Check]:
         add("Photos load", False, str(e))
 
     try:
-        two = fetch(client, Search(bedrooms=[2]), "available")
+        two = fetch(client, Search(countries=["nl"], bedrooms=[2]), "available")
         add("Filters are applied", all(x.bedrooms == 2 for x in two.values()), f"{len(two)} homes with 2 bedrooms")
-        cities = {c.name for c in client.cities()}
-        unknown = sorted(c for c in cities if not any(catalog.same_city(c, k) for k in catalog.CITIES))
+        listed = client.cities()
+        unknown = sorted(c.name for c in listed if not any(catalog.same_city(c.name, k) for k in catalog.CITIES))
         if unknown:
             checks.append(Check("New cities", "notice", ", ".join(unknown) + " (add them to catalog.py)"))
     except CodomoError as e:
         add("Follow-up pages answer", False, str(e))
+        return checks
+
+    codes = sorted({c.country.lower() for c in listed} - {"nl"}, key=lambda c: (c not in catalog.MARKETS, c))
+    for code in codes:
+        name = catalog.market_label(code)
+        try:
+            homes, _ = _all(client, code, {"publish_mode": "direct_booking"})
+            add(f"Homes in {name} can be read", True, f"{len(homes)} homes to book directly")
+        except CodomoError as e:
+            add(f"Homes in {name} can be read", False, str(e))
+        if code not in catalog.MARKETS:
+            checks.append(Check("New country", "notice", f"{code.upper()} (add it to MARKETS in catalog.py)"))
     return checks
 
 

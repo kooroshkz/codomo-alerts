@@ -104,14 +104,15 @@ class Watcher:
         search = self.cfg.search
         self.discover(now)
         first = not self.store.get("welcomed")
-        available = self.apply("available", self.resolve(fetch(self.client, search, "available")), now)
+        seen = self.seen_markets()
+        available = self.apply("available", self.resolve(fetch(self.client, search, "available", seen)), now)
         results = [available]
         if available.baseline:
             self.started(available, now)
         if not search.interest:
             self.interest_off()
         elif self.due("interest_checked", now, schedule.interest_due_every(self.cfg.schedule)):
-            interest = self.apply("interest", self.resolve(fetch(self.client, search, "interest")), now)
+            interest = self.apply("interest", self.resolve(fetch(self.client, search, "interest", seen)), now)
             results.append(interest)
             self.store.set("interest_checked", iso(now))
             if first and interest.baseline and self.cfg.notify.existing_on_start:
@@ -213,8 +214,13 @@ class Watcher:
         except Changed as e:
             log.debug("City discovery skipped: %s", e)
             seen = {}
-        self.store.set("cities_seen", seen)
+        if seen:    # a failed read keeps the last list, so countries don't come and go
+            self.store.set("cities_seen", seen)
         self.store.set("cities_checked", iso(now))
+
+    def seen_markets(self) -> list[str]:
+        """Countries codomo.eu listed at the last city check, new ones included."""
+        return sorted(set((self.store.get("cities_seen") or {}).values()))
 
     def wanted_city(self, city: str, country: str) -> bool:
         search = self.cfg.search
@@ -222,7 +228,7 @@ class Watcher:
             return False
         if search.cities:
             return any(catalog.same_city(city, c) for c in search.cities)
-        return country == "nl"
+        return country in search.markets(self.seen_markets())
 
     def buildings(self, now: datetime) -> None:
         """New building pages in codomo.eu's sitemap: a building often shows up before its homes

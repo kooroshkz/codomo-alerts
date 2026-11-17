@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import tomllib
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import date, time
 from pathlib import Path
@@ -30,6 +31,7 @@ class ConfigError(Exception):
 
 @dataclass
 class Search:
+    countries: list[str] = field(default_factory=list)    # empty: every country
     cities: list[str] = field(default_factory=list)
     exclude_cities: list[str] = field(default_factory=list)
     bedrooms: list[int] = field(default_factory=list)
@@ -39,6 +41,7 @@ class Search:
     price_min: int | None = None
     price_max: int | None = None
     move_in_before: date | None = None
+    gender: str | None = None     # skip homes Codomo keeps for the other gender
     interest: bool = True
 
     def fingerprint(self) -> str:
@@ -47,13 +50,24 @@ class Search:
         data["move_in_before"] = str(self.move_in_before or "")
         return json.dumps(data, sort_keys=True)
 
-    def markets(self) -> list[str]:
-        """Countries to read. The Netherlands, unless only cities abroad are named."""
-        named = list(dict.fromkeys(catalog.market_of(c) for c in self.cities))
-        return named or ["nl"]
+    def markets(self, seen: Iterable[str] = ()) -> list[str]:
+        """Countries to read: those of the named cities, else the named countries, else every
+        country Codomo lists (`seen` adds countries found on the site since this release)."""
+        if self.cities:
+            return list(dict.fromkeys(catalog.market_of(c) or "nl" for c in self.cities))
+        if self.countries:
+            return list(self.countries)
+        return list(dict.fromkeys([*catalog.MARKETS, *seen]))
 
     def summary(self) -> str:
-        parts = [", ".join(self.cities) if self.cities else "All cities in the Netherlands"]
+        if self.cities:
+            where = ", ".join(self.cities)
+        elif self.countries:
+            where = "All cities in " + ", ".join("the Netherlands" if c == "nl" else catalog.market_label(c)
+                                                 for c in self.countries)
+        else:
+            where = "Every Codomo city"
+        parts = [where]
         if self.exclude_cities:
             parts.append("not " + ", ".join(self.exclude_cities))
         if self.bedrooms:
@@ -82,6 +96,8 @@ class Search:
             parts.append(f"for {self.persons} people" if self.persons > 1 else "for 1 person")
         if self.move_in_before:
             parts.append(f"move in by {self.move_in_before:%d %b}")
+        if self.gender:
+            parts.append("open to women" if self.gender == "female" else "open to men")
         return " · ".join(parts)
 
 
@@ -254,6 +270,8 @@ def build(raw: dict, env: dict, source: Path | None = None) -> Config:
     cfg = Config(source=source)
 
     search = Search()
+    search.countries = _resolve(_list(pick("CODOMO_COUNTRIES", s, "countries")), catalog.market, "countries",
+                                ", ".join(catalog.MARKETS.values()) + " or all")
     search.cities = _cities(_list(pick("CODOMO_CITIES", s, "cities")), "cities")
     search.exclude_cities = _cities(_list(pick("CODOMO_EXCLUDE_CITIES", s, "exclude_cities")), "exclude_cities")
     search.bedrooms = sorted(_resolve(_list(pick("CODOMO_BEDROOMS", s, "bedrooms")), catalog.bedrooms,
@@ -280,6 +298,12 @@ def build(raw: dict, env: dict, source: Path | None = None) -> Config:
             search.move_in_before = move if isinstance(move, date) else date.fromisoformat(str(move))
         except ValueError:
             raise ConfigError(f"move_in_before: expected YYYY-MM-DD, got {move!r}") from None
+    gender = pick("CODOMO_GENDER", s, "gender")
+    if gender not in (None, ""):
+        try:
+            search.gender = catalog.gender(str(gender))
+        except KeyError:
+            raise ConfigError(f"gender: expected female or male, got {gender!r}") from None
     interest = pick("CODOMO_INTEREST", s, "interest")
     if interest is None and "lottery" in s:
         interest = s["lottery"]
@@ -289,6 +313,10 @@ def build(raw: dict, env: dict, source: Path | None = None) -> Config:
     if overlap:
         names = ", ".join(c for c in search.cities if catalog.norm(c) in overlap)
         raise ConfigError(f"{names} is both in cities and exclude_cities")
+    for city in search.cities:
+        code = catalog.market_of(city)
+        if search.countries and code not in search.countries:
+            raise ConfigError(f"{city} is in {catalog.market_label(code or '')}, which is not in countries")
     cfg.search = search
 
     notify = Notify()

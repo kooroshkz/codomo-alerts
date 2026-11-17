@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Alertas Codomo Lisboa e Carcavelos: aviso de novos quartos</title>
+  <meta name="description" content="Alertas gratuitos e de código aberto para novos quartos da Codomo (antes Holland2Stay) em Carcavelos, perto de Lisboa. Uma mensagem no Telegram, Discord, ntfy ou e-mail quando aparece um que te serve.">
+  <link rel="canonical" href="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <link rel="alternate" hreflang="en" href="https://kooroshkz.github.io/codomo-alerts/">
+  <link rel="alternate" hreflang="nl" href="https://kooroshkz.github.io/codomo-alerts/nl/">
+  <link rel="alternate" hreflang="es" href="https://kooroshkz.github.io/codomo-alerts/es/">
+  <link rel="alternate" hreflang="pt" href="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <link rel="alternate" hreflang="de" href="https://kooroshkz.github.io/codomo-alerts/de/">
+  <link rel="alternate" hreflang="x-default" href="https://kooroshkz.github.io/codomo-alerts/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Codomo alerts">
+  <meta property="og:title" content="Alertas Codomo Lisboa e Carcavelos">
+  <meta property="og:description" content="Sabe na hora quando a Codomo publica um quarto em Carcavelos que corresponde à tua pesquisa.">
+  <meta property="og:url" content="https://kooroshkz.github.io/codomo-alerts/pt/">
+  <meta property="og:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:locale" content="pt_PT">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="nl_NL">
+  <meta property="og:locale:alternate" content="es_ES">
+  <meta property="og:locale:alternate" content="de_AT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Alertas Codomo Lisboa e Carcavelos">
+  <meta name="twitter:description" content="Sabe na hora quando a Codomo publica um quarto em Carcavelos que corresponde à tua pesquisa.">
+  <meta name="twitter:image" content="https://kooroshkz.github.io/codomo-alerts/assets/og.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Codomo alerts",
+    "alternateName": [
+      "codomo-alerts",
+      "Holland2Stay alerts",
+      "holland2stay-alerts"
+    ],
+    "description": "Alertas gratuitos para novos quartos da Codomo (antes Holland2Stay) em Carcavelos, Lisboa, e em todos os países da Codomo.",
+    "inLanguage": "pt-PT",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Linux, macOS, Windows, Docker",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    },
+    "isAccessibleForFree": true,
+    "url": "https://kooroshkz.github.io/codomo-alerts/pt/",
+    "image": "https://kooroshkz.github.io/codomo-alerts/assets/og.png",
+    "screenshot": "https://kooroshkz.github.io/codomo-alerts/assets/dashboard.png",
+    "codeRepository": "https://github.com/kooroshkz/codomo-alerts",
+    "downloadUrl": "https://github.com/kooroshkz/codomo-alerts",
+    "license": "https://opensource.org/licenses/MIT",
+    "author": {
+      "@type": "Person",
+      "name": "kooroshkz",
+      "url": "https://github.com/kooroshkz"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": "pt-PT",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Há uma app da Codomo que avise de quartos novos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Codomo usa o perfil de pesquisa do teu portal de inquilino para as casas com registo de interesse. Para receber uma mensagem por cada nova publicação, filtrada à tua maneira e na app que já usas, existe esta ferramenta gratuita e não oficial."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Reserva por mim?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Não. Avisa-te e tu reservas em codomo.eu. Reservar com ferramentas automáticas vai contra os termos deles. Deixa um separador aberto com a sessão iniciada e ficas a um clique."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Porque é que os anúncios em Portugal não indicam a tipologia?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Codomo não a indica. São quartos numa residência de estudantes, por isso o filtro bedrooms conta-os como estúdios: studio inclui-os, 2+ não."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O que é a Codomo?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Codomo, antes Holland2Stay, arrenda quartos, estúdios e apartamentos nos Países Baixos, em Granada, em Carcavelos (Lisboa) e em Linz. Esta ferramenta não é da Codomo."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Preciso de um servidor?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Não. Serve qualquer computador que fique ligado: um portátil ligado à corrente, um Raspberry Pi, um NAS ou um VPS pequeno."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Em que língua chegam os avisos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Em inglês, tal como o painel."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <a class="brand" href="../pt/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg>
+      <span>codomo <b>alerts</b></span>
+    </a>
+    <nav>
+      <a href="#start">Começar</a>
+      <a href="../demo/">Demo</a>
+      <a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Grátis · código aberto · no teu próprio computador · não oficial</p>
+      <h1>Sabe na hora quando a Codomo publica um quarto em Carcavelos.</h1>
+      <p class="lead">Os bons quartos desaparecem em minutos. Esta ferramenta acompanha as novas publicações em codomo.eu (antes Holland2Stay) por ti e envia uma mensagem para o telemóvel quando aparece um que corresponde à tua pesquisa: a tua cidade, o teu orçamento, as tuas datas.</p>
+      <div class="cta">
+        <a class="button primary" href="#start">Começar</a>
+        <a class="button" href="../demo/">Ver a demo</a>
+      </div>
+      <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT" aria-current="page">Português</a> · <a href="../de/" hreflang="de" lang="de">Deutsch</a></p>
+    </section>
+
+    <figure class="shot glass">
+      <img src="../assets/dashboard.png" alt="O painel: quartos que te servem, atividade e a que horas aparecem os novos" width="1280" height="1770" loading="lazy">
+    </figure>
+
+    <section id="start">
+      <h2>Pronto num minuto</h2>
+      <div class="two">
+        <div class="glass card">
+          <h3>Docker</h3>
+          <pre><code>docker run -d --name codomo-alerts --restart unless-stopped \
+  -e CODOMO_CITIES=&quot;Lisboa&quot; \
+  -e CODOMO_PRICE_MAX=950 \
+  -e CODOMO_NOTIFY=&quot;tgram://BOT_TOKEN/CHAT_ID&quot; \
+  -v codomo-data:/data -p 127.0.0.1:8080:8080 \
+  ghcr.io/kooroshkz/codomo-alerts</code></pre>
+          <p>O painel fica em <code>localhost:8080</code>. Também funciona num Raspberry Pi ou num NAS.</p>
+        </div>
+        <div class="glass card">
+          <h3>Python</h3>
+          <pre><code>pipx install codomo-alerts
+codomo-alerts init
+codomo-alerts watch</code></pre>
+          <p><code>init</code> faz algumas perguntas e envia uma mensagem de teste.</p>
+        </div>
+      </div>
+      <p class="hint">Lisboa, Lisbon e Carcavelos funcionam como nome de cidade. Para todo o Portugal usa <code>CODOMO_COUNTRIES=pt</code>.</p>
+    </section>
+
+    <section id="where">
+      <h2>Todas as cidades da Codomo</h2>
+      <p class="intro">Todos os países onde a Codomo arrenda, e os novos assim que abrirem.</p>
+      <div class="grid two-col">
+        <div class="glass card"><h3>Portugal</h3><p>Carcavelos, perto de Lisboa (Codomo Lombos). Quartos para estudantes a partir de cerca de 869 € por mês.</p></div>
+        <div class="glass card"><h3>Países Baixos</h3><p>Eindhoven, Roterdão, Amesterdão, Haia, Utrecht e mais 21 cidades.</p><a class="more-link" href="../nl/" hreflang="nl" lang="nl">Nederlands</a></div>
+        <div class="glass card"><h3>Espanha</h3><p>Granada (Codomo Granada). Quartos a partir de cerca de 395 € por mês.</p><a class="more-link" href="../es/" hreflang="es" lang="es">Español</a></div>
+        <div class="glass card"><h3>Áustria</h3><p>Linz (Codomo Linz). Quartos para estudantes a partir de cerca de 709 € por mês.</p><a class="more-link" href="../de/" hreflang="de" lang="de">Deutsch</a></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Avisos na app que já usas</h2>
+      <ul class="chips">
+        <li>Telegram</li><li>Discord</li><li>ntfy</li><li>Slack</li><li>Email</li><li>Signal</li>
+        <li>Matrix</li><li>Pushover</li><li>Gotify</li><li>Home Assistant</li><li>Webhooks</li>
+        <li class="more">e mais de 100 através do <a href="https://github.com/caronc/apprise/wiki">Apprise</a></li>
+      </ul>
+      <div class="glass message">
+        <small>Telegram, 09:42</small>
+        <strong>Rua Quinta da Lobita 10 224</strong>
+        <span>Carcavelos · €869</span>
+        <span>Max 1 year · Furnished</span>
+        <span class="link">codomo.eu/homes/pt/en/carcavelos/lombos/rua-quinta-da-lobita-10-224</span>
+      </div>
+      <p class="note">Os avisos chegam em inglês.</p>
+    </section>
+
+    <section>
+      <h2>O que recebes</h2>
+      <div class="grid">
+        <div class="glass card"><h3>A tua pesquisa</h3><p>Países, cidades, quartos, orçamento, duração do contrato, mobília, data de entrada e quartos só para mulheres ou só para homens.</p></div>
+        <div class="glass card"><h3>Só o que é novo</h3><p>Quartos novos, os que voltam a ficar livres, os da lista curta que passam a reserva direta e descidas de preço. Nunca o mesmo duas vezes.</p></div>
+        <div class="glass card"><h3>Registar interesse</h3><p>Casas em que a Codomo escolhe alguém de uma lista curta, com quantas pessoas já se inscreveram.</p></div>
+        <div class="glass card"><h3>Edifícios novos</h3><p>Uma mensagem quando surge a página de um edifício novo em codomo.eu.</p></div>
+        <div class="glass card"><h3>Painel</h3><p>O que está livre, o que já foi e em quanto tempo, e a que horas costumam aparecer.</p></div>
+        <div class="glass card"><h3>Educado</h3><p>Uma verificação a cada poucos minutos, mais vezes nas horas em que se publica. Diz quem é e abranda quando lhe pedem.</p></div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Perguntas</h2>
+      <div class="faq">
+        <details class="glass"><summary>Há uma app da Codomo que avise de quartos novos?</summary><p>A Codomo usa o perfil de pesquisa do teu portal de inquilino para as casas com registo de interesse. Para receber uma mensagem por cada nova publicação, filtrada à tua maneira e na app que já usas, existe esta ferramenta gratuita e não oficial.</p></details>
+        <details class="glass"><summary>Reserva por mim?</summary><p>Não. Avisa-te e tu reservas em codomo.eu. Reservar com ferramentas automáticas vai contra os termos deles. Deixa um separador aberto com a sessão iniciada e ficas a um clique.</p></details>
+        <details class="glass"><summary>Porque é que os anúncios em Portugal não indicam a tipologia?</summary><p>A Codomo não a indica. São quartos numa residência de estudantes, por isso o filtro <code>bedrooms</code> conta-os como estúdios: <code>studio</code> inclui-os, <code>2+</code> não.</p></details>
+        <details class="glass"><summary>O que é a Codomo?</summary><p>A Codomo, antes Holland2Stay, arrenda quartos, estúdios e apartamentos nos Países Baixos, em Granada, em Carcavelos (Lisboa) e em Linz. Esta ferramenta não é da Codomo.</p></details>
+        <details class="glass"><summary>Preciso de um servidor?</summary><p>Não. Serve qualquer computador que fique ligado: um portátil ligado à corrente, um Raspberry Pi, um NAS ou um VPS pequeno.</p></details>
+        <details class="glass"><summary>Em que língua chegam os avisos?</summary><p>Em inglês, tal como o painel.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Não oficial e independente. Sem ligação à Codomo nem à Holland2Stay B.V., que não o apoiam. Os nomes servem apenas para descrever com o que funciona. Usa por tua conta e risco e respeita os termos deles.</p>
+    <p class="langs"><a href="../" hreflang="en" lang="en">English</a> · <a href="../nl/" hreflang="nl" lang="nl">Nederlands</a> · <a href="../es/" hreflang="es" lang="es">Español</a> · <a href="../pt/" hreflang="pt" lang="pt-PT" aria-current="page">Português</a> · <a href="../de/" hreflang="de" lang="de">Deutsch</a></p>
+    <p><a href="https://github.com/kooroshkz/codomo-alerts">GitHub</a> · MIT license</p>
+  </footer>
+
+  <div class="star">
+    <a href="https://github.com/kooroshkz/codomo-alerts" target="_blank" rel="noopener"
+       aria-label="Star codomo-alerts on GitHub">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.95 3.95 4.36.64-3.16 3.07.75 4.34L8 11.55 4.1 13.6l.75-4.34L1.69 6.19l4.36-.64z"/></svg>
+      <span>Star <span class="long">no GitHub</span></span>
+      <b id="stars" hidden></b>
+    </a>
+  </div>
+  <script>
+    // Star count, once it's worth showing. Cached for an hour per visit.
+    (async () => {
+      const el = document.getElementById("stars");
+      const show = (n) => {
+        if (n < 10) return;
+        el.textContent = n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n);
+        el.hidden = false;
+      };
+      try {
+        const cached = JSON.parse(sessionStorage.getItem("codomo-alerts-stars") || "null");
+        if (cached && Date.now() - cached.t < 3600e3) return show(cached.n);
+      } catch (e) { /* no storage */ }
+      try {
+        const res = await fetch("https://api.github.com/repos/kooroshkz/codomo-alerts");
+        const n = (await res.json()).stargazers_count;
+        if (typeof n !== "number") return;
+        show(n);
+        try { sessionStorage.setItem("codomo-alerts-stars", JSON.stringify({ n, t: Date.now() })); } catch (e) { /* no storage */ }
+      } catch (e) { /* offline or rate limited: just the button */ }
+    })();
+  </script>
+</body>
+</html>
