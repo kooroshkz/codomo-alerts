@@ -26,6 +26,11 @@ def test_rooms_for_one_gender_say_so():
     assert body.splitlines()[1] == "Indefinite · Furnished · Female only"
 
 
+def test_digest_lines_say_who_a_room_is_for():
+    _, body = messages.digest([("new", home("A", city="Linz", bedrooms=None, gender="male")), ("new", home("B"))])
+    assert body.startswith("A · Linz · €1,998 · Male only\n") and "B · Eindhoven · Studio · €1,998\n" in body
+
+
 def test_missing_details_leave_no_gaps():
     title, body = messages.alert("back", home(city=None, bedrooms=None, contract=None, furnishing=None))
     assert title == "Back: Kastanjelaan 1-135"

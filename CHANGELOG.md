@@ -1,8 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+- A message with several homes now says "Female only" or "Male only" on each room Codomo
+  keeps for one gender, like single alerts already did.
+- First release on PyPI under the new name (0.2.0 is on GitHub and ghcr.io only).
+
 ## 0.2.0
 
-Holland2Stay became Codomo on 2026-11-15. Every holland2stay.com address now redirects to
+Holland2Stay became Codomo on 2026-11-16. Every holland2stay.com address now redirects to
 codomo.eu, and the REST API this tool used is gone, so this release reads codomo.eu instead.
 It is a breaking release.
 

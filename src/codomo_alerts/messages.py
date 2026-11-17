@@ -67,7 +67,9 @@ def digest(items: list[tuple[str, Listing]], now: datetime | None = None) -> tup
     for kind, x in items[:DIGEST_LIMIT]:
         label = "" if kind in ("new", "interest") else {"back": "Back: ", "bookable": "Now bookable: ",
                                                           "price": "Price drop: "}[kind]
-        extra = f" · {interested(x)}" if kind == "interest" and interested(x) else ""
+        extra = f" · {x.gender_name}" if x.gender_name else ""
+        if kind == "interest" and interested(x):
+            extra += f" · {interested(x)}"
         blocks.append(f"{label}{x.name} · {facts(x)}{extra}\n{x.url}")
     if n > DIGEST_LIMIT:
         blocks.append(f"and {n - DIGEST_LIMIT} more")
