@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 LABEL org.opencontainers.image.title="codomo-alerts" \
       org.opencontainers.image.description="Self-hosted alerts for new Codomo homes (formerly Holland2Stay) in the Netherlands, Spain, Portugal and Austria" \

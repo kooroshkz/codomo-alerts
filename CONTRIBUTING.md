@@ -58,3 +58,6 @@ failing the run.
 
 GitHub pauses scheduled workflows in public repos after 60 days without commits. Merging the
 monthly Dependabot updates keeps it running.
+
+`legacy/holland2stay-alerts` is the old name on PyPI: a package that only installs
+codomo-alerts. Each release publishes it with the same version.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3
+
+- `holland2stay-alerts` on PyPI now only installs `codomo-alerts`, so `pipx upgrade
+  holland2stay-alerts` and the old `holland2stay-alerts` and `h2s-alerts` commands keep working
+  (with a note to switch).
+- The Docker image runs on Python 3.14 (was 3.12); CI tests 3.11 to 3.14. Python 3.15 waits
+  until PyYAML, which Apprise needs, ships for it.
+- GitHub Actions updated to their Node.js 24 versions.
+
 ## 0.2.2
 
 - First release on PyPI under the new name (0.2.0 and 0.2.1 are on GitHub and ghcr.io only).

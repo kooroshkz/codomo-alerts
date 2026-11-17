@@ -267,6 +267,8 @@ JSON from `http://HOST:8080/api/overview` with a REST sensor.
 
 - Install the new package: `pipx uninstall holland2stay-alerts && pipx install codomo-alerts`,
   or use the image `ghcr.io/kooroshkz/codomo-alerts`.
+  `pipx upgrade holland2stay-alerts` works too: that package now only installs codomo-alerts,
+  and the old commands start it.
 - Rename `H2S_` variables to `CODOMO_`. In the config, `lottery` is now `interest` (the old
   key still works) and `occupants` is now `persons`, a number of people.
 - City names, bedrooms like `2+`, `contract = ["long"]` and furnishing names keep working.
